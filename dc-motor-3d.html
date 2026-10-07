@@ -1,0 +1,481 @@
+<!-- DC Motor — 3D interactive (A-level)
+     Self-contained. Three.js r128 core only (no add-on modules).
+     Custom orbit/zoom. Real torque dynamics with a split-ring commutator.
+     Geometry: coil long sides run along z; coil spins about z.
+       θ = 0  → sides at ±x (coil plane parallel to field B∥x) → torque MAX
+       θ = 90°→ sides at ±y (coil plane ⟂ field) → torque ZERO = dead-spot
+     Commutator reverses current at the dead-spots (θ = 90°, 270°).
+     τ = B·I·A·N·cosθ ;  dω/dt = (drive − b·ω)/J ;  A = L·w -->
+<div id="dcm-root">
+  <div class="dcm-shell">
+
+    <header class="dcm-bar">
+      <div class="dcm-title">
+        <h1>DC Motor</h1>
+        <p>Drag to orbit · scroll to zoom</p>
+      </div>
+      <div class="dcm-runbox">
+        <button id="dcm-run" class="dcm-btn">Pause</button>
+        <button id="dcm-reset" class="dcm-btn dcm-ghost">Reset view</button>
+      </div>
+    </header>
+
+    <div class="dcm-stagewrap">
+      <div id="dcm-stage" class="dcm-stage">
+        <div id="dcm-panel" class="dcm-panel">
+          <div class="dcm-row"><span class="l">Field B</span><span id="p-B" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Current I</span><span id="p-I" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Turns N</span><span id="p-N" class="r">—</span></div>
+          <div class="dcm-hr"></div>
+          <div class="dcm-row"><span class="l">Force / side</span><span id="p-F" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Torque (max)</span><span id="p-Tmax" class="r amber">—</span></div>
+          <div class="dcm-row"><span class="l">Torque (now)</span><span id="p-Tnow" class="r amber">—</span></div>
+          <div class="dcm-hr"></div>
+          <div class="dcm-row"><span class="l">Coil angle θ</span><span id="p-th" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Speed ω</span><span id="p-w" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Back-EMF</span><span id="p-emf" class="r">—</span></div>
+          <div class="dcm-hr"></div>
+          <div class="dcm-row"><span class="l">Commutator</span><span id="p-comm" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Current</span><span id="p-cur" class="r">—</span></div>
+          <div class="dcm-row"><span class="l">Spinning</span><span id="p-dir" class="r">—</span></div>
+        </div>
+      </div>
+      <div class="dcm-legend">
+        <span><i class="dcm-sw dcm-cur"></i> conventional current</span>
+        <span><i class="dcm-sw dcm-for"></i> force on coil (F = BIL)</span>
+        <span><i class="dcm-sw dcm-fld"></i> magnetic field B</span>
+      </div>
+      <div id="dcm-note" class="dcm-msg"></div>
+    </div>
+
+    <div class="dcm-controls">
+      <div class="dcm-ctl">
+        <label>Current <span id="dcm-Iout">3.0 A</span></label>
+        <input id="dcm-I" type="range" min="0" max="6" step="0.1" value="3">
+      </div>
+      <div class="dcm-ctl">
+        <label>Field strength B <span id="dcm-Bout">0.40 T</span></label>
+        <input id="dcm-B" type="range" min="0.05" max="1" step="0.01" value="0.40">
+      </div>
+      <div class="dcm-ctl">
+        <label>Turns N <span id="dcm-Nout">1</span></label>
+        <input id="dcm-N" type="range" min="1" max="10" step="1" value="1">
+      </div>
+      <div class="dcm-ctl dcm-btnrow">
+        <button id="dcm-revI" class="dcm-btn dcm-mini">Reverse current</button>
+        <button id="dcm-swap" class="dcm-btn dcm-mini">Swap poles</button>
+      </div>
+      <div class="dcm-ctl dcm-checks">
+        <label class="dcm-chk"><input id="dcm-showF" type="checkbox" checked> Force arrows</label>
+        <label class="dcm-chk"><input id="dcm-showCommutator" type="checkbox" checked> Highlight commutator</label>
+        <label class="dcm-chk"><input id="dcm-slow" type="checkbox"> Slow motion</label>
+      </div>
+    </div>
+
+  </div>
+
+<style>
+  #dcm-root{
+    --ink:#16222c; --soft:#5a6770; --line:#ccd6dd;
+    --paper:#eef2f5; --card:#fbfcfd; --edge:#dde5ea;
+    --teal:#0e8c86; --teal-d:#0a615d; --teal-soft:#d6ecea;
+    --rose:#d6336c; --amber:#d98a16; --blue:#2f6fb0; --green:#1f9d57;
+    --sans:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Consolas,monospace;
+    box-sizing:border-box; font-family:var(--sans); color:var(--ink);
+    background:var(--paper); line-height:1.5; min-height:560px;
+  }
+  #dcm-root *{ box-sizing:border-box; }
+  #dcm-root .dcm-shell{ max-width:920px; margin:0 auto; padding:14px; }
+
+  #dcm-root .dcm-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:linear-gradient(150deg,#15303a,#0e242c); color:#fff;
+    padding:14px 18px; border-radius:12px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 18px rgba(12,30,36,.18);
+  }
+  #dcm-root .dcm-title h1{ margin:0; font-size:20px; font-weight:700; letter-spacing:-.01em; }
+  #dcm-root .dcm-title p{ margin:2px 0 0; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#bfe1de; }
+  #dcm-root .dcm-runbox{ display:flex; gap:8px; }
+
+  #dcm-root .dcm-btn{
+    font-family:var(--sans); font-size:13.5px; font-weight:600; color:#fff;
+    background:var(--teal); border:1px solid var(--teal-d); border-radius:8px;
+    padding:8px 14px; cursor:pointer;
+  }
+  #dcm-root .dcm-btn:hover{ filter:brightness(1.07); }
+  #dcm-root .dcm-ghost{ color:#cfeeea; background:rgba(255,255,255,.06); border-color:rgba(207,238,234,.4); }
+  #dcm-root .dcm-mini{ font-size:12.5px; padding:7px 11px; }
+  #dcm-root .dcm-mini.dcm-on{ background:var(--amber); border-color:#b96f12; }
+
+  #dcm-root .dcm-stagewrap{ margin:14px 0; }
+  #dcm-root .dcm-stage{
+    width:100%; aspect-ratio:16/10; min-height:380px; max-height:560px;
+    background:radial-gradient(circle at 50% 38%,#fefefe,#e4ebef);
+    border:1px solid var(--edge); border-radius:12px; overflow:hidden;
+    touch-action:none; cursor:grab; position:relative;
+  }
+  #dcm-root .dcm-stage:active{ cursor:grabbing; }
+  #dcm-root .dcm-stage canvas{ display:block; width:100%; height:100%; }
+
+  /* ---- overlay readout panel ---- */
+  #dcm-root .dcm-panel{
+    position:absolute; top:12px; left:12px; width:210px; z-index:5;
+    background:rgba(251,252,253,.93); border:1px solid var(--edge); border-radius:10px;
+    padding:9px 12px; box-shadow:0 4px 16px rgba(20,40,50,.16);
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+  }
+  #dcm-root .dcm-row{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 0; }
+  #dcm-root .dcm-row .l{ font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); white-space:nowrap; }
+  #dcm-root .dcm-row .r{ font-family:var(--mono); font-size:12.5px; font-weight:700; color:var(--ink); text-align:right; white-space:nowrap; }
+  #dcm-root .dcm-row .r.amber{ color:var(--amber); }
+  #dcm-root .dcm-row .r.green{ color:var(--green); }
+  #dcm-root .dcm-hr{ height:1px; background:var(--edge); margin:5px 0; }
+
+  #dcm-root .dcm-legend{
+    display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:8px;
+    font-size:12.5px; color:var(--soft);
+  }
+  #dcm-root .dcm-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  #dcm-root .dcm-sw{ width:16px; height:4px; border-radius:2px; display:inline-block; }
+  #dcm-root .dcm-cur{ background:var(--amber); }
+  #dcm-root .dcm-for{ background:var(--rose); }
+  #dcm-root .dcm-fld{ background:var(--blue); }
+
+  #dcm-root .dcm-msg{ margin-top:8px; font-size:12.5px; color:var(--soft); background:#eef3f5; border-left:3px solid var(--teal); border-radius:0 6px 6px 0; padding:7px 10px; }
+  #dcm-root .dcm-msg b{ color:var(--ink); }
+
+  #dcm-root .dcm-controls{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px 18px;
+    background:var(--card); border:1px solid var(--edge); border-radius:12px;
+    padding:14px 16px;
+  }
+  #dcm-root .dcm-ctl label{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; color:var(--soft); margin-bottom:4px; }
+  #dcm-root .dcm-ctl label span{ font-family:var(--mono); color:var(--teal-d); }
+  #dcm-root .dcm-ctl input[type=range]{ width:100%; accent-color:var(--teal); }
+  #dcm-root .dcm-btnrow{ display:flex; gap:8px; align-items:flex-end; }
+  #dcm-root .dcm-checks{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:8px 18px; }
+  #dcm-root .dcm-chk{ display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--soft); cursor:pointer; }
+
+  @media (max-width:680px){
+    #dcm-root .dcm-controls{ grid-template-columns:1fr; }
+    #dcm-root .dcm-stage{ aspect-ratio:4/3; }
+    #dcm-root .dcm-panel{ width:172px; top:8px; left:8px; padding:7px 10px; }
+    #dcm-root .dcm-row .r{ font-size:11.5px; }
+  }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var root=document.getElementById('dcm-root'); if(!root) return;
+  var $=function(id){ return document.getElementById(id); };
+  var stage=$('dcm-stage');
+
+  // ---------- state ----------
+  var I=3.0, B=0.40, N=1;
+  var theta=0, omega=0;
+  var running=true, slow=false, showF=true, showComm=true;
+  var Isign=1, Bsign=1;
+  // real-ish geometry → physical readouts
+  var Lphys=0.10, wphys=0.05, Aphys=Lphys*wphys; // m, m, m²
+  var GAIN=100, J=0.10, b=0.22, WMAX=7.0;        // dynamics tuning (arb.)
+
+  // ---------- three.js scene ----------
+  var W=stage.clientWidth||720, H=stage.clientHeight||450;
+  var scene=new THREE.Scene(); scene.background=null;
+  var camera=new THREE.PerspectiveCamera(42, W/H, 0.1, 100);
+  var renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  renderer.setSize(W,H);
+  stage.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff,0.72));
+  var keyL=new THREE.DirectionalLight(0xffffff,0.7); keyL.position.set(4,6,5); scene.add(keyL);
+  var fillL=new THREE.DirectionalLight(0xbbccdd,0.3); fillL.position.set(-5,2,-3); scene.add(fillL);
+
+  var orbit={ az:0.7, el:0.5, r:7.5 };
+  function placeCamera(){
+    var ce=Math.max(0.05,Math.min(Math.PI-0.05,orbit.el));
+    camera.position.set(
+      orbit.r*Math.sin(ce)*Math.sin(orbit.az),
+      orbit.r*Math.cos(ce),
+      orbit.r*Math.sin(ce)*Math.cos(orbit.az)
+    );
+    camera.lookAt(0,0,0);
+  }
+  placeCamera();
+
+  // ---------- magnets ----------
+  function makeMagnet(x){
+    var g=new THREE.Group();
+    var mat=new THREE.MeshLambertMaterial({color:0xcccccc});
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(0.5,2.0,2.6),mat));
+    g.userData.mat=mat; g.position.x=x; scene.add(g); return g;
+  }
+  var magL=makeMagnet(-2.1), magR=makeMagnet(2.1);
+
+  function letterTex(txt,color){
+    var c=document.createElement('canvas'); c.width=c.height=128;
+    var ctx=c.getContext('2d');
+    ctx.fillStyle=color; ctx.font='bold 92px Segoe UI,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,64,70);
+    return new THREE.CanvasTexture(c);
+  }
+  var texN=letterTex('N','#d6455f'), texS=letterTex('S','#3f7bc4');
+  function makeSprite(x){
+    var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:texN,transparent:true}));
+    sp.scale.set(0.9,0.9,0.9); sp.position.set(x,1.25,1.4); scene.add(sp); return sp;
+  }
+  var spriteL=makeSprite(-2.1), spriteR=makeSprite(2.1);
+
+  function applyPoles(){
+    var nC=0xd6455f, sC=0x3f7bc4;
+    if(Bsign>0){
+      magL.userData.mat.color.setHex(nC); spriteL.material.map=texN;
+      magR.userData.mat.color.setHex(sC); spriteR.material.map=texS;
+    } else {
+      magL.userData.mat.color.setHex(sC); spriteL.material.map=texS;
+      magR.userData.mat.color.setHex(nC); spriteR.material.map=texN;
+    }
+    spriteL.material.needsUpdate=true; spriteR.material.needsUpdate=true;
+    rebuildField();
+  }
+
+  // ---------- field lines (density ∝ B, direction = Bsign) ----------
+  var fieldGroup=new THREE.Group(); scene.add(fieldGroup);
+  var fieldMat=new THREE.LineBasicMaterial({color:0x2f6fb0,transparent:true,opacity:0.5});
+  var fieldHeadMat=new THREE.MeshBasicMaterial({color:0x2f6fb0});
+  function rebuildField(){
+    while(fieldGroup.children.length) fieldGroup.remove(fieldGroup.children[0]);
+    var rows=Math.round(1+B*4);
+    var zs=[-0.8,0,0.8];
+    var x1=-1.75*Bsign, x2=1.75*Bsign;
+    for(var zi=0; zi<zs.length; zi++){
+      for(var r=0;r<rows;r++){
+        var y=(rows===1)?0:(-0.85 + 1.7*r/(rows-1)), z=zs[zi];
+        var geo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x1,y,z),new THREE.Vector3(x2,y,z)]);
+        fieldGroup.add(new THREE.Line(geo,fieldMat));
+        var ah=new THREE.Mesh(new THREE.ConeGeometry(0.07,0.2,10),fieldHeadMat);
+        ah.position.set(0.9*Bsign,y,z); ah.rotation.z=(Bsign>0?-Math.PI/2:Math.PI/2);
+        fieldGroup.add(ah);
+      }
+    }
+  }
+
+  // ---------- rotating armature ----------
+  var arm=new THREE.Group(); scene.add(arm);
+  var coilGroup=new THREE.Group(); arm.add(coilGroup);
+  var COIL_H=1.4, COIL_D=1.7;
+  function buildCoil(turns){
+    while(coilGroup.children.length) coilGroup.remove(coilGroup.children[0]);
+    var wire=new THREE.MeshLambertMaterial({color:0xb87333}); var rad=0.045;
+    for(var t=0;t<turns;t++){
+      var off=(t-(turns-1)/2)*0.12;
+      [-1,1].forEach(function(sx){
+        var side=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,COIL_D*2,12),wire);
+        side.rotation.x=Math.PI/2; side.position.set(sx*COIL_H, off, 0); coilGroup.add(side);
+      });
+      [-1,1].forEach(function(sz){
+        var end=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,COIL_H*2,12),wire);
+        end.rotation.z=Math.PI/2; end.position.set(0, off, sz*COIL_D); coilGroup.add(end);
+      });
+    }
+  }
+  buildCoil(N);
+
+  var shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,4.4,16),new THREE.MeshLambertMaterial({color:0x555}));
+  shaft.rotation.x=Math.PI/2; arm.add(shaft);
+
+  // current-direction cones — children of coilGroup, sitting ON the long sides
+  var curMat=new THREE.MeshBasicMaterial({color:0xe0871a});
+  function curArrow(){ return new THREE.Mesh(new THREE.ConeGeometry(0.13,0.4,12),curMat); }
+  var curR=curArrow(), curL=curArrow();
+  curR.position.set( COIL_H,0,0); coilGroup.add(curR);
+  curL.position.set(-COIL_H,0,0); coilGroup.add(curL);
+  function reattachCones(){ curR.position.set(COIL_H,0,0); curL.position.set(-COIL_H,0,0); coilGroup.add(curR); coilGroup.add(curL); }
+
+  // split-ring commutator (+z end)
+  var commGroup=new THREE.Group(); commGroup.position.z=2.0; arm.add(commGroup);
+  function halfRing(start){
+    var geo=new THREE.CylinderGeometry(0.46,0.46,0.5,40,1,false,start,Math.PI-0.16);
+    var m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0xc9a227}));
+    m.rotation.x=Math.PI/2; return m;
+  }
+  // gaps offset by π/2 so the slit faces the top/bottom brushes at the dead-spot
+  var ringA=halfRing(Math.PI/2+0.08), ringB=halfRing(3*Math.PI/2+0.08);
+  commGroup.add(ringA); commGroup.add(ringB);
+
+  var brushMat=new THREE.MeshLambertMaterial({color:0x333});
+  function brush(y){ var m=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.4,0.22),brushMat); m.position.set(0,y,2.0); return m; }
+  scene.add(brush(0.62)); scene.add(brush(-0.62));
+
+  // force arrows (world frame)
+  var up=new THREE.Vector3(0,1,0);
+  function makeArrow(color){
+    var g=new THREE.Group(); var mat=new THREE.MeshBasicMaterial({color:color});
+    var sh=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1,10),mat); sh.position.y=0.5; g.add(sh);
+    var hd=new THREE.Mesh(new THREE.ConeGeometry(0.13,0.3,12),mat); hd.position.y=1.05; g.add(hd);
+    scene.add(g); return g;
+  }
+  var forceL=makeArrow(0xd6336c), forceR=makeArrow(0xd6336c);
+  function setArrow(grp, origin, ydir, len){
+    grp.position.copy(origin);
+    grp.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(up,new THREE.Vector3(0,ydir,0)));
+    grp.scale.set(1,Math.max(0.0001,len),1);
+  }
+
+  var base=new THREE.Mesh(new THREE.BoxGeometry(6.2,0.25,3.2),new THREE.MeshLambertMaterial({color:0xdfe7ea}));
+  base.position.y=-1.6; scene.add(base);
+
+  // ---------- battery + connecting wires ----------
+  var BAT=new THREE.Vector3(0,-1.02,3.1);
+  var batBody=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.24,1.1,24),new THREE.MeshLambertMaterial({color:0x2b2b2b}));
+  batBody.rotation.z=Math.PI/2; batBody.position.copy(BAT); scene.add(batBody);
+  var batBand=new THREE.Mesh(new THREE.CylinderGeometry(0.245,0.245,0.34,24),new THREE.MeshLambertMaterial({color:0xc9a227}));
+  batBand.rotation.z=Math.PI/2; batBand.position.set(BAT.x+0.12,BAT.y,BAT.z); scene.add(batBand);
+  var nub=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.12,16),new THREE.MeshLambertMaterial({color:0xcccccc}));
+  nub.rotation.z=Math.PI/2; nub.position.set(BAT.x+0.61,BAT.y,BAT.z); scene.add(nub);
+
+  var endR=new THREE.Vector3(BAT.x+0.55,BAT.y,BAT.z), endL=new THREE.Vector3(BAT.x-0.55,BAT.y,BAT.z);
+  var brushTopP=new THREE.Vector3(0,0.62,2.0), brushBotP=new THREE.Vector3(0,-0.62,2.0);
+  function makeWire(pts,color){
+    var geo=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),44,0.035,8,false);
+    var mat=new THREE.MeshLambertMaterial({color:color});
+    var m=new THREE.Mesh(geo,mat); m.userData.mat=mat; scene.add(m); return m;
+  }
+  var wireR=makeWire([endR,new THREE.Vector3(1.0,-0.3,2.75),new THREE.Vector3(0.35,0.62,2.2),brushTopP],0xd6336c);
+  var wireL=makeWire([endL,new THREE.Vector3(-1.0,-0.5,2.75),new THREE.Vector3(-0.35,-0.62,2.2),brushBotP],0x333333);
+
+  var texPlus=letterTex('+','#d6336c'), texMinus=letterTex('−','#333333');
+  function termSprite(x){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:texPlus,transparent:true})); sp.scale.set(0.42,0.42,0.42); sp.position.set(x,BAT.y+0.44,BAT.z); scene.add(sp); return sp; }
+  var spP=termSprite(BAT.x+0.55), spM=termSprite(BAT.x-0.55);
+
+  function applyBatteryPolarity(){
+    if(Isign>0){
+      spP.material.map=texPlus; spM.material.map=texMinus;
+      wireR.userData.mat.color.setHex(0xd6336c); wireL.userData.mat.color.setHex(0x333333);
+    } else {
+      spP.material.map=texMinus; spM.material.map=texPlus;
+      wireR.userData.mat.color.setHex(0x333333); wireL.userData.mat.color.setHex(0xd6336c);
+    }
+    spP.material.needsUpdate=true; spM.material.needsUpdate=true;
+  }
+
+  // ---------- physics + update ----------
+  function update(dt){
+    var spin=Isign*Bsign;
+    var torqueMax=B*I*Aphys*N;                 // N·m  (at θ=0)
+    var couple=torqueMax*Math.cos(theta);      // signed
+    var drive=spin*torqueMax*Math.abs(Math.cos(theta))*GAIN; // commutated, one-way
+
+    if(running){
+      var dtP=slow?dt*0.3:dt;
+      omega += (drive - b*omega)/J * dtP;
+      if(omega>WMAX) omega=WMAX; if(omega<-WMAX) omega=-WMAX;
+      theta += omega*dtP;
+    }
+    theta=((theta%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+
+    coilGroup.rotation.z=theta;
+    commGroup.rotation.z=theta;
+
+    // *** commutator flips at the DEAD-SPOTS: θ = 90°, 270° ***
+    var flipped=(Math.floor((theta+Math.PI/2)/Math.PI)%2)!==0;
+    var dirR=(flipped?-1:1)*Isign;
+    var dirL=-dirR;
+    curR.rotation.set(dirR>0?-Math.PI/2:Math.PI/2,0,0);
+    curL.rotation.set(dirL>0?-Math.PI/2:Math.PI/2,0,0);
+
+    var c=Math.cos(theta), s=Math.sin(theta);
+    var sideR=new THREE.Vector3( COIL_H*c, COIL_H*s, 0);
+    var sideL=new THREE.Vector3(-COIL_H*c,-COIL_H*s, 0);
+
+    var fyR=dirR*Bsign, fyL=dirL*Bsign;
+    var fmag=Math.max(0.12, Math.min(1.5, B*I*N*0.45));
+    if(showF){
+      forceL.visible=forceR.visible=true;
+      setArrow(forceR, sideR, fyR, fmag);
+      setArrow(forceL, sideL, fyL, fmag);
+    } else { forceL.visible=forceR.visible=false; }
+
+    // highlight near a changeover (distance to θ = 90° within each π)
+    var phase=theta%Math.PI;
+    var dToFlip=Math.abs(phase-Math.PI/2);
+    var near=showComm && dToFlip<0.22;
+    ringA.material.color.setHex(near?0xff5a3c:0xc9a227);
+    ringB.material.color.setHex(near?0xff5a3c:0xc9a227);
+
+    // ---------- readout panel ----------
+    var forceSide=B*I*N*Lphys;                 // N
+    var torqueNow=Math.abs(couple);            // N·m
+    var emf=Math.abs(B*Aphys*N*omega*Math.cos(theta)); // V (illustrative)
+    $('p-B').textContent=B.toFixed(2)+' T';
+    $('p-I').textContent=I.toFixed(1)+' A';
+    $('p-N').textContent=N;
+    $('p-F').textContent=(forceSide*1000).toFixed(1)+' mN';
+    $('p-Tmax').textContent=(torqueMax*1000).toFixed(2)+' mN·m';
+    $('p-Tnow').textContent=(torqueNow*1000).toFixed(2)+' mN·m';
+    $('p-th').textContent=(theta*180/Math.PI).toFixed(0)+'°';
+    $('p-w').textContent=omega.toFixed(2)+' rad s⁻¹';
+    $('p-emf').textContent=(emf*1000).toFixed(1)+' mV';
+    $('p-comm').textContent= dToFlip<0.22 ? 'switching ↻' : 'in contact';
+    var revState = flipped !== (Isign<0);
+    var curEl=$('p-cur');
+    curEl.textContent= revState ? '← reversed' : 'forward →';
+    curEl.className = 'r' + (revState?' green':'');
+    $('p-dir').textContent = Math.abs(omega)<0.05 ? 'stationary' : (omega>0?'anticlockwise':'clockwise');
+
+    var msg;
+    if(I<=0.001) msg='No current — no force, no rotation. <b>F = BIL</b> needs a current.';
+    else if(Math.abs(Math.cos(theta))>0.94) msg='Coil in the <b>plane of the field</b>: the couple is greatest here.';
+    else if(Math.abs(Math.cos(theta))<0.1) msg='<b>Dead-spot</b> — coil ⟂ to the field, torque ≈ 0. The <b>split-ring commutator reverses the current here</b>, so the next push keeps the coil turning the same way.';
+    else msg='The two sides feel <b>opposite forces</b> — a couple that turns the coil. Watch the speed pulse: fastest in the plane of the field, slowest at each dead-spot.';
+    $('dcm-note').innerHTML=msg;
+  }
+
+  var last=performance.now();
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    update(dt); placeCamera(); renderer.render(scene,camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---------- orbit + zoom ----------
+  var dragging=false, px=0, py=0;
+  stage.addEventListener('pointerdown',function(e){ if(e.target.closest('.dcm-panel')) return; dragging=true; px=e.clientX; py=e.clientY; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener('pointermove',function(e){
+    if(!dragging) return;
+    var dx=e.clientX-px, dy=e.clientY-py; px=e.clientX; py=e.clientY;
+    orbit.az-=dx*0.008; orbit.el-=dy*0.008;
+    orbit.el=Math.max(0.08,Math.min(Math.PI-0.08,orbit.el));
+  });
+  function endDrag(){ dragging=false; }
+  stage.addEventListener('pointerup',endDrag);
+  stage.addEventListener('pointercancel',endDrag);
+  stage.addEventListener('wheel',function(e){
+    e.preventDefault(); orbit.r*=(1+(e.deltaY>0?0.08:-0.08)); orbit.r=Math.max(4,Math.min(16,orbit.r));
+  },{passive:false});
+
+  // ---------- controls ----------
+  $('dcm-I').addEventListener('input',function(){ I=parseFloat(this.value); $('dcm-Iout').textContent=I.toFixed(1)+' A'; });
+  $('dcm-B').addEventListener('input',function(){ B=parseFloat(this.value); $('dcm-Bout').textContent=B.toFixed(2)+' T'; rebuildField(); });
+  $('dcm-N').addEventListener('input',function(){ N=parseInt(this.value,10); $('dcm-Nout').textContent=N; buildCoil(N); reattachCones(); });
+  $('dcm-showF').addEventListener('change',function(){ showF=this.checked; });
+  $('dcm-showCommutator').addEventListener('change',function(){ showComm=this.checked; });
+  $('dcm-slow').addEventListener('change',function(){ slow=this.checked; });
+  $('dcm-revI').addEventListener('click',function(){ Isign*=-1; this.classList.toggle('dcm-on',Isign<0); applyBatteryPolarity(); });
+  $('dcm-swap').addEventListener('click',function(){ Bsign*=-1; this.classList.toggle('dcm-on',Bsign<0); applyPoles(); });
+  $('dcm-run').addEventListener('click',function(){ running=!running; this.textContent=running?'Pause':'Run'; });
+  $('dcm-reset').addEventListener('click',function(){ orbit.az=0.7; orbit.el=0.5; orbit.r=7.5; });
+
+  // ---------- init + resize ----------
+  applyPoles();
+  applyBatteryPolarity();
+  function resize(){ W=stage.clientWidth||720; H=stage.clientHeight||450; camera.aspect=W/H; camera.updateProjectionMatrix(); renderer.setSize(W,H); }
+  var ro=new ResizeObserver(resize); ro.observe(stage);
+  setTimeout(resize,40);
+})();
+</script>
+</div>
