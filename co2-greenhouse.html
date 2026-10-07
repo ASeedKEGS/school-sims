@@ -1,0 +1,451 @@
+<!-- CO₂, the greenhouse "blanket" and the ice–albedo feedback  (GCSE / A-level)
+
+  CORRECT CAUSAL STRUCTURE (this is the lesson):
+    1. More CO₂  →  the atmosphere absorbs MORE OUTGOING INFRARED.
+       CO₂ is transparent to incoming shortwave sunlight, but absorbs longwave
+       IR radiated by the warm surface, then re-emits it in all directions —
+       part of it back DOWN. This back-radiation is the "blanket". (PRIMARY cause.)
+    2. Surface warms.
+    3. Warming melts ice & snow.
+    4. The darker surface reflects less sunlight → ALBEDO FALLS.
+    5. More solar energy is absorbed → further warming  (positive FEEDBACK).
+  So a falling albedo is a CONSEQUENCE of warming that AMPLIFIES it — it sits
+  downstream of CO₂, it is not the link between CO₂ and temperature.
+
+  PHYSICS MODEL (single-layer "grey" atmosphere, validated in Node):
+    Mean solar flux  S/4 = 340 W m⁻²        σ = 5.67×10⁻⁸
+    Surface balance :  T_s = [ (1−α)·(S/4) / (σ·(1 − ε/2)) ]^¼
+      ε = effective IR absorptivity of the atmosphere, rises with ln(CO₂):
+          ε(C) = ε₀ + k·ln(C/280)      (logarithmic forcing, like real CO₂)
+      α = albedo, falls with temperature (ice melt):  smoothstep 0.31→0.27
+    Coupled (α depends on T, T depends on α) → relaxed to equilibrium each tick.
+    Checks:  ε=0,α=0.30 → 255 K (−18 °C, the airless value) ✓
+             280 ppm → 13.5 °C, albedo 0.31   1200 ppm → 24 °C, albedo 0.28 ✓ -->
+<div id="ghg-root">
+  <nav class="ghg-tabs">
+    <button class="ghg-tab ghg-active" data-view="earth">Earth's energy balance</button>
+    <button class="ghg-tab" data-view="molec">Inside the atmosphere</button>
+  </nav>
+
+  <div class="ghg-shell">
+    <header class="ghg-bar">
+      <div class="ghg-title">
+        <h1>CO₂, the Greenhouse Blanket &amp; Albedo</h1>
+        <p id="ghg-sub">why more CO₂ warms the surface</p>
+      </div>
+      <div class="ghg-statebox">
+        <span id="ghg-bigT" class="ghg-bigT">— °C</span>
+        <span id="ghg-bigTag" class="ghg-bigtag">SURFACE</span>
+      </div>
+    </header>
+
+    <!-- ===================== TAB 1: ENERGY BALANCE ===================== -->
+    <div class="ghg-view" id="ghg-earth">
+      <div class="ghg-main">
+        <div class="ghg-card ghg-scenecard">
+          <canvas id="ghg-cv1" class="ghg-canvas" width="660" height="460" aria-label="Earth energy balance"></canvas>
+        </div>
+
+        <aside class="ghg-rail">
+          <div class="ghg-ctl">
+            <label>Atmospheric CO₂ <span id="ghg-co2lab1">420 ppm</span></label>
+            <input id="ghg-co2a" type="range" min="280" max="1200" step="5" value="420">
+            <div class="ghg-ticks"><span>280<br>pre-ind.</span><span>420<br>today</span><span>1200<br>high</span></div>
+          </div>
+
+          <div class="ghg-panel">
+            <div class="ghg-prow"><span class="l">Surface temp</span><span id="ghg-pT" class="r amber">—</span></div>
+            <div class="ghg-prow"><span class="l">vs pre-industrial</span><span id="ghg-pdT" class="r rose">—</span></div>
+            <div class="ghg-hr"></div>
+            <div class="ghg-prow"><span class="l">IR opacity ε</span><span id="ghg-pE" class="r teal">—</span></div>
+            <div class="ghg-prow"><span class="l">Albedo α</span><span id="ghg-pA" class="r blue">—</span></div>
+            <div class="ghg-hr"></div>
+            <div class="ghg-prow"><span class="l">Sunlight in</span><span class="r">340 W/m²</span></div>
+            <div class="ghg-prow"><span class="l">Reflected (α)</span><span id="ghg-pRef" class="r">—</span></div>
+            <div class="ghg-prow"><span class="l">IR sent back down</span><span id="ghg-pBack" class="r">—</span></div>
+          </div>
+
+          <div class="ghg-chain">
+            <div class="ghg-chainhead">What actually happens</div>
+            <ol class="ghg-steps">
+              <li class="s-co2"><b>More CO₂</b> in the air</li>
+              <li class="s-ir"><b>More outgoing IR absorbed</b> &amp; re-radiated <i>down</i> — the blanket</li>
+              <li class="s-warm"><b>Surface warms</b></li>
+              <li class="s-melt">Ice &amp; snow melt</li>
+              <li class="s-alb"><b>Albedo falls</b> — darker surface reflects less</li>
+              <li class="s-fb">More sunlight absorbed → <b>extra warming</b> <span class="ghg-fbtag">feedback</span></li>
+            </ol>
+            <p class="ghg-note">Albedo change is a <b>result</b> of warming that <b>amplifies</b> it — not the step between CO₂ and temperature.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ===================== TAB 2: MOLECULAR ===================== -->
+    <div class="ghg-view ghg-hidden" id="ghg-molec">
+      <div class="ghg-main">
+        <div class="ghg-card ghg-scenecard">
+          <canvas id="ghg-cv2" class="ghg-canvas" width="660" height="460" aria-label="CO2 molecules absorbing infrared"></canvas>
+        </div>
+
+        <aside class="ghg-rail">
+          <div class="ghg-ctl">
+            <label>Atmospheric CO₂ <span id="ghg-co2lab2">420 ppm</span></label>
+            <input id="ghg-co2b" type="range" min="280" max="1200" step="5" value="420">
+            <div class="ghg-ticks"><span>fewer<br>molecules</span><span></span><span>more<br>molecules</span></div>
+          </div>
+
+          <div class="ghg-panel">
+            <div class="ghg-prow"><span class="l">CO₂ molecules shown</span><span id="ghg-pMol" class="r teal">—</span></div>
+            <div class="ghg-hr"></div>
+            <div class="ghg-prow"><span class="l">IR escaped to space</span><span id="ghg-pEsc" class="r blue">—</span></div>
+            <div class="ghg-prow"><span class="l">IR sent back to Earth</span><span id="ghg-pRet" class="r rose">—</span></div>
+            <div class="ghg-prow"><span class="l">Fraction returned</span><span id="ghg-pFrac" class="r amber">—</span></div>
+          </div>
+
+          <div class="ghg-chain">
+            <div class="ghg-chainhead">Why CO₂ acts as a blanket</div>
+            <p class="ghg-mtxt"><span class="ghg-sw vis"></span><b>Visible sunlight</b> — the wrong frequency for CO₂, so it <b>passes straight through</b> the molecules.</p>
+            <p class="ghg-mtxt"><span class="ghg-sw ir"></span><b>Infrared</b> from the warm ground <b>matches CO₂'s vibrations</b>: it is absorbed, the molecule bends &amp; stretches, then re-emits IR in a <b>random direction</b> — often back down.</p>
+            <p class="ghg-note">More CO₂ → more IR intercepted → a bigger share sent <b>back to Earth</b> instead of escaping to space.</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  #ghg-root{
+    --ink:#16222c; --soft:#5a6770; --line:#ccd6dd;
+    --paper:#eef2f5; --card:#fbfcfd; --edge:#dde5ea;
+    --teal:#0e8c86; --teal-d:#0a615d; --teal-soft:#d6ecea;
+    --rose:#d6336c; --amber:#d98a16; --blue:#2f6fb0; --green:#1f9d57;
+    --sun:#f4b323; --ir:#e0552b;
+    --sans:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Consolas,monospace;
+    box-sizing:border-box; font-family:var(--sans); color:var(--ink);
+    background:var(--paper); line-height:1.5; min-height:560px;
+  }
+  #ghg-root *{ box-sizing:border-box; }
+  #ghg-root .ghg-shell{ max-width:1080px; margin:0 auto; padding:0 14px 16px; }
+
+  #ghg-root .ghg-tabs{ display:flex; gap:6px; max-width:1080px; margin:0 auto; padding:14px 14px 0; }
+  #ghg-root .ghg-tab{ font:600 13px var(--sans); color:var(--soft); background:#e3eaee; border:1px solid var(--edge); border-bottom:none;
+    border-radius:10px 10px 0 0; padding:9px 16px; cursor:pointer; }
+  #ghg-root .ghg-tab:hover{ color:var(--ink); }
+  #ghg-root .ghg-tab.ghg-active{ color:#fff; background:linear-gradient(150deg,#15303a,#0e242c); border-color:#0e242c; }
+
+  #ghg-root .ghg-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:linear-gradient(150deg,#15303a,#0e242c); color:#fff;
+    padding:14px 18px; border-radius:0 12px 12px 12px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 18px rgba(12,30,36,.18);
+  }
+  #ghg-root .ghg-title h1{ margin:0; font-size:20px; font-weight:700; letter-spacing:-.01em; }
+  #ghg-root .ghg-title p{ margin:2px 0 0; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#bfe1de; }
+  #ghg-root .ghg-statebox{ text-align:right; }
+  #ghg-root .ghg-bigT{ display:block; font-family:var(--mono); font-size:22px; font-weight:700; color:#ffd79a; letter-spacing:.01em; }
+  #ghg-root .ghg-bigtag{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:#9fc4c2; }
+
+  #ghg-root .ghg-view.ghg-hidden{ display:none; }
+  #ghg-root .ghg-main{ margin-top:14px; display:grid; grid-template-columns:1fr; gap:14px; }
+  @media (min-width:981px){ #ghg-root .ghg-main{ grid-template-columns:1.5fr minmax(360px,1fr); align-items:start; } }
+
+  #ghg-root .ghg-card{ background:var(--card); border:1px solid var(--edge); border-radius:12px; }
+  #ghg-root .ghg-scenecard{ padding:8px; }
+  #ghg-root .ghg-canvas{ display:block; width:100%; height:auto; border-radius:8px; }
+
+  #ghg-root .ghg-rail{ display:flex; flex-direction:column; gap:14px; }
+  #ghg-root .ghg-ctl{ background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:14px 16px; }
+  #ghg-root .ghg-ctl label{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; color:var(--soft); margin-bottom:8px; }
+  #ghg-root .ghg-ctl label span{ font-family:var(--mono); color:var(--teal-d); }
+  #ghg-root .ghg-ctl input[type=range]{ width:100%; accent-color:var(--teal); }
+  #ghg-root .ghg-ticks{ display:flex; justify-content:space-between; margin-top:6px; font-size:9.5px; color:var(--soft); text-align:center; line-height:1.25; }
+  #ghg-root .ghg-ticks span{ flex:1; }
+  #ghg-root .ghg-ticks span:last-child{ text-align:right; }
+  #ghg-root .ghg-ticks span:first-child{ text-align:left; }
+
+  #ghg-root .ghg-panel{ background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:10px 14px; }
+  #ghg-root .ghg-prow{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:3px 0; }
+  #ghg-root .ghg-prow .l{ font-size:10px; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); white-space:nowrap; }
+  #ghg-root .ghg-prow .r{ font-family:var(--mono); font-size:13px; font-weight:700; color:var(--ink); text-align:right; }
+  #ghg-root .ghg-prow .r.amber{ color:var(--amber); } #ghg-root .ghg-prow .r.rose{ color:var(--rose); }
+  #ghg-root .ghg-prow .r.teal{ color:var(--teal-d); } #ghg-root .ghg-prow .r.blue{ color:var(--blue); }
+  #ghg-root .ghg-hr{ height:1px; background:var(--edge); margin:5px 0; }
+
+  #ghg-root .ghg-chain{ background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:12px 16px 14px; }
+  #ghg-root .ghg-chainhead{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); margin-bottom:8px; }
+  #ghg-root .ghg-steps{ margin:0; padding-left:20px; }
+  #ghg-root .ghg-steps li{ font-size:12.5px; color:var(--ink); padding:3px 0; }
+  #ghg-root .ghg-steps li.s-ir{ color:var(--ir); } #ghg-root .ghg-steps li.s-ir b{ color:#b8431f; }
+  #ghg-root .ghg-steps li.s-warm b{ color:var(--amber); }
+  #ghg-root .ghg-steps li.s-alb b{ color:var(--blue); }
+  #ghg-root .ghg-steps li.s-fb b{ color:var(--rose); }
+  #ghg-root .ghg-fbtag{ font:600 9px var(--mono); background:#fbe1ea; color:var(--rose); padding:1px 6px; border-radius:5px; letter-spacing:.05em; text-transform:uppercase; }
+  #ghg-root .ghg-note{ margin:9px 0 0; font-size:11.5px; color:var(--soft); border-left:3px solid var(--teal); padding-left:9px; }
+  #ghg-root .ghg-mtxt{ margin:0 0 8px; font-size:12px; color:var(--ink); }
+  #ghg-root .ghg-sw{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
+  #ghg-root .ghg-sw.vis{ background:var(--sun); } #ghg-root .ghg-sw.ir{ background:var(--ir); }
+</style>
+
+<script>
+(function(){
+  var root=document.getElementById('ghg-root'); if(!root) return;
+  var $=function(id){ return document.getElementById(id); };
+
+  /* ---------------- physics ---------------- */
+  var S4=340.25, SIG=5.670e-8, Cref=280, EPS0=0.770, kE=0.085;
+  var A_COLD=0.31, A_WARM=0.27, Tlo=284, Thi=303;
+  function epsilon(C){ return Math.min(0.965, Math.max(0, EPS0+kE*Math.log(C/Cref))); }
+  function smoothstep(a,b,x){ if(x<=a)return 0; if(x>=b)return 1; var t=(x-a)/(b-a); return t*t*(3-2*t); }
+  function albedoOf(T){ return A_COLD+(A_WARM-A_COLD)*smoothstep(Tlo,Thi,T); }
+  function Tsurf(a,e){ return Math.pow((1-a)*S4/(SIG*(1-e/2)),0.25); }
+  function equilT(C){ var e=epsilon(C),T=288; for(var i=0;i<300;i++){ T+=(Tsurf(albedoOf(T),e)-T)*0.2; } return T; }
+  var T_PREIND = equilT(280);   // baseline for anomaly
+
+  var st={ co2:420, T:equilT(420), eps:0, alb:0 };
+
+  function recompute(){
+    st.eps=epsilon(st.co2); st.alb=albedoOf(st.T);
+    var Tc=st.T-273.15, dT=st.T-T_PREIND;
+    var reflected=st.alb*340, back=st.eps*168;   // illustrative back-radiation scale
+    $('ghg-co2lab1').textContent=st.co2+' ppm';
+    $('ghg-co2lab2').textContent=st.co2+' ppm';
+    $('ghg-pT').textContent=Tc.toFixed(1)+' °C';
+    $('ghg-pdT').textContent=(dT>=0?'+':'')+dT.toFixed(1)+' °C';
+    $('ghg-pE').textContent=st.eps.toFixed(3);
+    $('ghg-pA').textContent=st.alb.toFixed(3);
+    $('ghg-pRef').textContent=reflected.toFixed(0)+' W/m²';
+    $('ghg-pBack').textContent=back.toFixed(0)+' W/m²';
+    $('ghg-bigT').textContent=Tc.toFixed(1)+' °C';
+    $('ghg-bigTag').textContent=(dT<0.5?'PRE-INDUSTRIAL':dT<2?'WARMING':dT<4?'HOT':'VERY HOT');
+    $('ghg-bigT').style.color = dT<2?'#ffd79a':dT<4?'#ffb066':'#ff8a6b';
+  }
+
+  /* ---------------- shared canvas helpers ---------------- */
+  var DPR=Math.min(2,window.devicePixelRatio||1), W=660,H=460;
+  function setup(cv){ var ctx=cv.getContext('2d'); cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); return ctx; }
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function mix(c1,c2,t){ return [Math.round(lerp(c1[0],c2[0],t)),Math.round(lerp(c1[1],c2[1],t)),Math.round(lerp(c1[2],c2[2],t))]; }
+  function rgb(c){ return 'rgb('+c[0]+','+c[1]+','+c[2]+')'; }
+  function clamp(x,a,b){ return x<a?a:x>b?b:x; }
+  function arrowHead(ctx,x,y,ang,s,col){ ctx.fillStyle=col; ctx.beginPath();
+    ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(ang-0.5),y-s*Math.sin(ang-0.5)); ctx.lineTo(x-s*Math.cos(ang+0.5),y-s*Math.sin(ang+0.5)); ctx.closePath(); ctx.fill(); }
+
+  /* ===================================================================
+     SCENE 1 — whole-Earth energy balance
+  =================================================================== */
+  var ctx1=setup($('ghg-cv1'));
+  var ATM_T=150, ATM_B=212, GND=362;   // band & surface y
+  var sunP=[], reflP=[], irP=[];        // particle arrays
+  var mols1=[];                         // CO2 molecules in the band
+  function buildMols1(){
+    var n=Math.round(lerp(5,26,(st.co2-280)/(1200-280)));
+    mols1=[]; for(var i=0;i<n;i++){ mols1.push({ x:40+Math.random()*(W-80), y:ATM_T+8+Math.random()*(ATM_B-ATM_T-16), ph:Math.random()*6.28, ex:0 }); }
+  }
+  var spawnC=0;
+  function step1(){
+    spawnC++;
+    /* spawn incoming sunlight */
+    if(spawnC%4===0){ var sx=70+Math.random()*(W-150); sunP.push({x:sx,y:-6,vx:0.5,vy:3.0,st:'in'}); }
+    /* spawn outgoing IR from surface */
+    if(spawnC%5===0){ irP.push({x:60+Math.random()*(W-120),y:GND-4,vy:-2.4,vx:(Math.random()-0.5)*0.5,st:'up'}); }
+
+    /* sunlight: straight down, reflect at surface w.p. albedo, else absorbed */
+    for(var i=sunP.length-1;i>=0;i--){ var p=sunP[i]; p.x+=p.vx; p.y+=p.vy;
+      if(p.st==='in' && p.y>=GND-4){ if(Math.random()<st.alb){ reflP.push({x:p.x,y:GND-4,vx:(Math.random()-0.5)*1.2,vy:-3.0}); } sunP.splice(i,1); }
+      else if(p.y>H+10) sunP.splice(i,1);
+    }
+    for(i=reflP.length-1;i>=0;i--){ var r=reflP[i]; r.x+=r.vx; r.y+=r.vy; if(r.y<-10) reflP.splice(i,1); }
+
+    /* IR: rise; at the band, test absorption by ε */
+    for(i=irP.length-1;i>=0;i--){ var q=irP[i]; q.x+=q.vx; q.y+=q.vy;
+      if(q.st==='up' && q.y<=ATM_B && q.y>=ATM_T){
+        if(Math.random()<st.eps*0.18){                 // chance per frame inside band ~ ε
+          /* absorb: snap to nearest molecule, excite, re-emit up or down */
+          var m=null,best=1e9; for(var k=0;k<mols1.length;k++){ var d=Math.abs(mols1[k].x-q.x)+Math.abs(mols1[k].y-q.y); if(d<best){best=d;m=mols1[k];} }
+          if(m){ m.ex=1; q.x=m.x; q.y=m.y; }
+          if(Math.random()<0.5){ q.st='back'; q.vy=2.4; q.vx=(Math.random()-0.5)*0.6; }
+          else { q.st='esc'; q.vy=-2.4; q.vx=(Math.random()-0.5)*0.6; }
+        }
+      }
+      if(q.st==='back' && q.y>=GND-4) irP.splice(i,1);
+      else if(q.y<-10||q.y>H+10) irP.splice(i,1);
+    }
+    if(sunP.length>120) sunP.splice(0,sunP.length-120);
+    if(irP.length>140) irP.splice(0,irP.length-140);
+    for(i=0;i<mols1.length;i++){ mols1[i].ph+=0.12; if(mols1[i].ex>0) mols1[i].ex=Math.max(0,mols1[i].ex-0.06); }
+  }
+
+  function draw1(){
+    var Tc=st.T-273.15, warm=clamp((Tc+5)/35,0,1);
+    /* space */
+    var g=ctx1.createLinearGradient(0,0,0,ATM_T); g.addColorStop(0,'#0b1733'); g.addColorStop(1,'#1b2c4d'); ctx1.fillStyle=g; ctx1.fillRect(0,0,W,ATM_T);
+    /* stars */
+    ctx1.fillStyle='rgba(255,255,255,.55)'; for(var s=0;s<26;s++){ var sx=(s*53+17)%W, sy=(s*29+9)%(ATM_T-20)+6; ctx1.fillRect(sx,sy,1.4,1.4); }
+    /* sun */
+    ctx1.fillStyle='#ffd23b'; ctx1.beginPath(); ctx1.arc(58,46,26,0,6.2832); ctx1.fill();
+    ctx1.fillStyle='rgba(255,210,59,.28)'; ctx1.beginPath(); ctx1.arc(58,46,40,0,6.2832); ctx1.fill();
+
+    /* atmosphere band (tint deepens with CO2) */
+    var ct=(st.co2-280)/(1200-280);
+    var bandTop=mix([214,231,238],[150,196,206],ct), bandBot=mix([196,221,231],[120,176,190],ct);
+    var bg=ctx1.createLinearGradient(0,ATM_T,0,ATM_B); bg.addColorStop(0,rgb(bandTop)); bg.addColorStop(1,rgb(bandBot)); ctx1.fillStyle=bg; ctx1.fillRect(0,ATM_T,W,ATM_B-ATM_T);
+    ctx1.strokeStyle='rgba(14,140,134,.35)'; ctx1.lineWidth=1; ctx1.strokeRect(0.5,ATM_T+0.5,W-1,ATM_B-ATM_T-1);
+    ctx1.fillStyle='#0a615d'; ctx1.font='600 11px '+'"Segoe UI",sans-serif'; ctx1.textAlign='left';
+    ctx1.fillText('atmosphere · CO₂ layer', 8, ATM_T+15);
+
+    /* sky + surface */
+    var skyTop=mix([196,221,235],[214,205,176],warm), skyBot=mix([223,236,242],[235,214,176],warm);
+    var sg=ctx1.createLinearGradient(0,ATM_B,0,GND); sg.addColorStop(0,rgb(skyTop)); sg.addColorStop(1,rgb(skyBot)); ctx1.fillStyle=sg; ctx1.fillRect(0,ATM_B,W,GND-ATM_B);
+    /* ground colour cool→warm */
+    var gTop=mix([90,150,150],[150,110,70],warm), gBot=mix([60,110,120],[120,80,52],warm);
+    var gg=ctx1.createLinearGradient(0,GND,0,H); gg.addColorStop(0,rgb(gTop)); gg.addColorStop(1,rgb(gBot)); ctx1.fillStyle=gg; ctx1.fillRect(0,GND,W,H-GND);
+    ctx1.fillStyle='rgba(0,0,0,.10)'; ctx1.fillRect(0,GND,W,2);
+
+    /* ice caps shrink as albedo falls */
+    var iceFrac=clamp((st.alb-A_WARM)/(A_COLD-A_WARM),0,1);
+    var capW=lerp(20,150,iceFrac);
+    ctx1.fillStyle='#f2f7fb';
+    ctx1.beginPath(); ctx1.moveTo(0,GND); ctx1.lineTo(capW,GND); ctx1.lineTo(0,GND+34+iceFrac*26); ctx1.closePath(); ctx1.fill();
+    ctx1.beginPath(); ctx1.moveTo(W,GND); ctx1.lineTo(W-capW,GND); ctx1.lineTo(W,GND+34+iceFrac*26); ctx1.closePath(); ctx1.fill();
+    ctx1.fillStyle='rgba(20,40,50,.55)'; ctx1.font='600 10px "Segoe UI",sans-serif'; ctx1.textAlign='center';
+    ctx1.fillText('ice', capW/2, GND+18);
+
+    /* photons */
+    for(var i=0;i<sunP.length;i++){ var p=sunP[i]; ctx1.strokeStyle='#f4b323'; ctx1.lineWidth=2.4; ctx1.beginPath(); ctx1.moveTo(p.x,p.y); ctx1.lineTo(p.x-p.vx*4,p.y-p.vy*4); ctx1.stroke(); arrowHead(ctx1,p.x,p.y,Math.atan2(p.vy,p.vx),5,'#f4b323'); }
+    for(i=0;i<reflP.length;i++){ var r=reflP[i]; ctx1.strokeStyle='#f7cf6b'; ctx1.lineWidth=2.2; ctx1.beginPath(); ctx1.moveTo(r.x,r.y); ctx1.lineTo(r.x-r.vx*4,r.y-r.vy*4); ctx1.stroke(); arrowHead(ctx1,r.x,r.y,Math.atan2(r.vy,r.vx),5,'#f7cf6b'); }
+    for(i=0;i<irP.length;i++){ var q=irP[i]; var col=q.st==='back'?'#d6336c':'#e0552b'; ctx1.strokeStyle=col; ctx1.lineWidth=2.2;
+      var ang=Math.atan2(q.vy,q.vx), px=-Math.sin(ang), py=Math.cos(ang); ctx1.beginPath();
+      for(var w=0;w<=5;w++){ var t=w/5, bx=q.x-q.vx*4*t, by=q.y-q.vy*4*t, off=Math.sin(t*9.4)*2.0; if(w===0)ctx1.moveTo(bx+px*off,by+py*off); else ctx1.lineTo(bx+px*off,by+py*off); }
+      ctx1.stroke(); arrowHead(ctx1,q.x,q.y,ang,5,col); }
+
+    /* molecules in band */
+    for(i=0;i<mols1.length;i++){ drawMol(ctx1,mols1[i].x,mols1[i].y,7,mols1[i].ph,mols1[i].ex,0.7); }
+
+    /* legend */
+    ctx1.textAlign='left'; ctx1.font='600 10px "Segoe UI",sans-serif';
+    legendDot(ctx1,12,H-44,'#f4b323','sunlight in (passes through CO₂)');
+    legendDot(ctx1,12,H-28,'#e0552b','infrared out (some absorbed)');
+    legendDot(ctx1,12,H-12,'#d6336c','IR re-radiated back down');
+  }
+  function legendDot(ctx,x,y,col,txt){ ctx.fillStyle=col; ctx.fillRect(x,y-7,9,9); ctx.fillStyle='rgba(20,34,44,.78)'; ctx.fillText(txt,x+14,y); }
+
+  /* a small O=C=O molecule, optionally bending when excited */
+  function drawMol(ctx,x,y,r,ph,ex,scale){
+    var bend=ex>0?Math.sin(ph*2)*4*ex:0, str=ex>0?Math.sin(ph*3)*2*ex:0;
+    var d=(r*2.0+str)*scale;
+    if(ex>0){ ctx.fillStyle='rgba(214,51,108,'+(0.18*ex)+')'; ctx.beginPath(); ctx.arc(x,y,d+8,0,6.2832); ctx.fill(); }
+    ctx.strokeStyle='#7c8790'; ctx.lineWidth=2*scale;
+    ctx.beginPath(); ctx.moveTo(x-d,y+bend); ctx.lineTo(x,y); ctx.lineTo(x+d,y+bend); ctx.stroke();
+    /* oxygens (red) + carbon (dark) */
+    ctx.fillStyle='#d6493f'; ctx.beginPath(); ctx.arc(x-d,y+bend,r*scale,0,6.2832); ctx.fill();
+    ctx.beginPath(); ctx.arc(x+d,y+bend,r*scale,0,6.2832); ctx.fill();
+    ctx.fillStyle='#3a4750'; ctx.beginPath(); ctx.arc(x,y,r*1.05*scale,0,6.2832); ctx.fill();
+  }
+
+  /* ===================================================================
+     SCENE 2 — molecular blanket (zoom)
+  =================================================================== */
+  var ctx2=setup($('ghg-cv2'));
+  var SKY2=70, GND2=400, mols2=[], visP=[], irP2=[];
+  var escCount=0, retCount=0;
+  function buildMols2(){
+    var n=Math.round(lerp(2,9,(st.co2-280)/(1200-280)));
+    mols2=[]; for(var i=0;i<n;i++){ mols2.push({ x:70+Math.random()*(W-140), y:SKY2+50+Math.random()*(GND2-SKY2-100), ph:Math.random()*6.28, ex:0, dx:(Math.random()-0.5)*0.25, dy:(Math.random()-0.5)*0.2 }); }
+    escCount=0; retCount=0;
+  }
+  var spawn2=0;
+  function step2(){
+    spawn2++;
+    if(spawn2%9===0){ visP.push({x:60+Math.random()*(W-120),y:SKY2-6,vy:3.0}); }
+    if(spawn2%7===0){ irP2.push({x:60+Math.random()*(W-120),y:GND2-4,vy:-2.2,vx:(Math.random()-0.5)*0.4,st:'up',cool:0}); }
+
+    /* molecules drift & wobble */
+    for(var i=0;i<mols2.length;i++){ var m=mols2[i]; m.x+=m.dx; m.y+=m.dy; m.ph+=0.1;
+      if(m.x<60||m.x>W-60)m.dx*=-1; if(m.y<SKY2+40||m.y>GND2-50)m.dy*=-1; if(m.ex>0)m.ex=Math.max(0,m.ex-0.04); }
+
+    /* visible light: passes straight through everything */
+    for(i=visP.length-1;i>=0;i--){ var v=visP[i]; v.y+=v.vy; if(v.y>GND2-4) visP.splice(i,1); }
+
+    /* IR: captured if near a molecule, re-emitted random direction */
+    for(i=irP2.length-1;i>=0;i--){ var q=irP2[i];
+      if(q.st==='hold'){ q.cool--; if(q.cool<=0){ var up=Math.random()<0.5; var ang=up?(-Math.PI/2+(Math.random()-0.5)*1.6):(Math.PI/2+(Math.random()-0.5)*1.6); var sp=2.4; q.vx=Math.cos(ang)*sp; q.vy=Math.sin(ang)*sp; q.st=up?'esc':'back'; } continue; }
+      q.x+=q.vx; q.y+=q.vy;
+      if(q.st==='up'){
+        for(var k=0;k<mols2.length;k++){ var mm=mols2[k]; var dx=mm.x-q.x, dy=mm.y-q.y; if(dx*dx+dy*dy<26*26){ mm.ex=1; q.x=mm.x; q.y=mm.y; q.st='hold'; q.cool=14; break; } }
+      }
+      if(q.st==='esc' && q.y<SKY2-8){ escCount++; irP2.splice(i,1); }
+      else if(q.st==='back' && q.y>GND2-4){ retCount++; irP2.splice(i,1); }
+      else if(q.y<-12||q.y>H+12) irP2.splice(i,1);
+    }
+    if(visP.length>60) visP.splice(0,visP.length-60);
+    if(irP2.length>90) irP2.splice(0,irP2.length-90);
+
+    var tot=escCount+retCount;
+    $('ghg-pEsc').textContent=escCount; $('ghg-pRet').textContent=retCount;
+    $('ghg-pFrac').textContent= tot>5 ? Math.round(100*retCount/tot)+' %' : '—';
+    $('ghg-pMol').textContent=mols2.length;
+  }
+
+  function draw2(){
+    /* space top, sky, ground */
+    var g=ctx2.createLinearGradient(0,0,0,SKY2); g.addColorStop(0,'#0b1733'); g.addColorStop(1,'#26406b'); ctx2.fillStyle=g; ctx2.fillRect(0,0,W,SKY2);
+    var sg=ctx2.createLinearGradient(0,SKY2,0,GND2); sg.addColorStop(0,'#d3e4ee'); sg.addColorStop(1,'#e7eef2'); ctx2.fillStyle=sg; ctx2.fillRect(0,SKY2,W,GND2-SKY2);
+    var Tc=st.T-273.15, warm=clamp((Tc+5)/35,0,1);
+    var gTop=mix([95,150,150],[150,110,70],warm), gBot=mix([60,110,120],[120,80,52],warm);
+    var gg=ctx2.createLinearGradient(0,GND2,0,H); gg.addColorStop(0,rgb(gTop)); gg.addColorStop(1,rgb(gBot)); ctx2.fillStyle=gg; ctx2.fillRect(0,GND2,W,H-GND2);
+    ctx2.fillStyle='rgba(0,0,0,.12)'; ctx2.fillRect(0,GND2,W,2);
+
+    ctx2.fillStyle='rgba(255,255,255,.6)'; ctx2.textAlign='left'; ctx2.font='600 11px "Segoe UI",sans-serif';
+    ctx2.fillText('to space ↑', 10, 18);
+    ctx2.fillStyle='rgba(20,40,50,.6)'; ctx2.fillText('warm surface (radiates infrared)', 10, GND2+18);
+
+    /* visible photons */
+    for(var i=0;i<visP.length;i++){ var v=visP[i]; ctx2.strokeStyle='#f4b323'; ctx2.lineWidth=2.6; ctx2.beginPath(); ctx2.moveTo(v.x,v.y); ctx2.lineTo(v.x,v.y-12); ctx2.stroke(); arrowHead(ctx2,v.x,v.y,Math.PI/2,6,'#f4b323'); }
+
+    /* IR photons (wavy) */
+    for(i=0;i<irP2.length;i++){ var q=irP2[i]; if(q.st==='hold') continue;
+      var col=q.st==='back'?'#d6336c':'#e0552b'; ctx2.strokeStyle=col; ctx2.lineWidth=2.4;
+      var ang=Math.atan2(q.vy,q.vx), px=-Math.sin(ang), py=Math.cos(ang); ctx2.beginPath();
+      for(var w=0;w<=6;w++){ var t=w/6, bx=q.x-q.vx*5*t, by=q.y-q.vy*5*t, off=Math.sin(t*12.6)*2.4; if(w===0)ctx2.moveTo(bx+px*off,by+py*off); else ctx2.lineTo(bx+px*off,by+py*off); }
+      ctx2.stroke(); arrowHead(ctx2,q.x,q.y,ang,6,col);
+    }
+
+    /* big molecules */
+    for(i=0;i<mols2.length;i++){ drawMol(ctx2,mols2[i].x,mols2[i].y,12,mols2[i].ph,mols2[i].ex,1.0);
+      if(mols2[i].ex>0.4){ ctx2.fillStyle='rgba(214,51,108,.8)'; ctx2.font='600 9px "Segoe UI",sans-serif'; ctx2.textAlign='center'; ctx2.fillText('vibrating', mols2[i].x, mols2[i].y-24); } }
+
+    /* legend */
+    ctx2.textAlign='left'; ctx2.font='600 10px "Segoe UI",sans-serif';
+    legendDot(ctx2,12,H-30,'#f4b323','visible: passes through');
+    legendDot(ctx2,12,H-14,'#e0552b','infrared: caught & re-emitted');
+  }
+
+  /* ---------------- tabs ---------------- */
+  var active='earth';
+  function show(v){ active=v;
+    $('ghg-earth').classList.toggle('ghg-hidden',v!=='earth');
+    $('ghg-molec').classList.toggle('ghg-hidden',v!=='molec');
+    $('ghg-sub').textContent = v==='earth' ? 'why more CO₂ warms the surface' : 'CO₂ molecules absorbing & re-emitting infrared';
+    var tabs=root.querySelectorAll('.ghg-tab'); tabs.forEach(function(t){ t.classList.toggle('ghg-active',t.getAttribute('data-view')===v); });
+  }
+  root.querySelectorAll('.ghg-tab').forEach(function(t){ t.addEventListener('click',function(){ show(t.getAttribute('data-view')); }); });
+
+  /* ---------------- sliders (synced, immediate update) ---------------- */
+  function onCO2(val){ st.co2=+val; $('ghg-co2a').value=val; $('ghg-co2b').value=val; buildMols1(); buildMols2(); recompute(); if(active==='earth')draw1(); else draw2(); }
+  $('ghg-co2a').addEventListener('input',function(){ onCO2(this.value); });
+  $('ghg-co2b').addEventListener('input',function(){ onCO2(this.value); });
+
+  /* ---------------- ticker ---------------- */
+  buildMols1(); buildMols2(); recompute();
+  setInterval(function(){
+    /* relax temperature toward equilibrium for current CO2 (thermal inertia) */
+    var Teq=Tsurf(albedoOf(st.T),epsilon(st.co2)); st.T+=(Teq-st.T)*0.04; recompute();
+    if(active==='earth'){ step1(); draw1(); } else { step2(); draw2(); }
+  },33);
+
+  show('earth');
+})();
+</script>

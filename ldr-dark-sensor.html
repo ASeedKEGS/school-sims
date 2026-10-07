@@ -1,0 +1,765 @@
+<!-- LDR / NTC-thermistor sensor — interactive (A-level / GCSE)
+     Voltage divider: fixed R on top, sensor (LDR or NTC thermistor) on the bottom.
+       V_out = V_s · R_sensor / (R + R_sensor)
+     LDR  : dark  → high R → V_out high → transistor ON → lamp lit  (dark-sensor)
+     NTC  : cold  → high R → V_out high → transistor ON → lamp lit  (cold-sensor)
+     Both transducers have falling resistance with rising input, so swapping one for
+     the other keeps the whole circuit and its behaviour identical in form.
+     Base loading ignored (high-impedance sensing), standard at this level. -->
+<div id="sense-root">
+  <nav class="sense-tabs">
+    <button class="sense-tab sense-active" data-view="circuit">Circuit</button>
+    <button class="sense-tab" data-view="carrier">Charge carriers</button>
+  </nav>
+  <div class="sense-view" id="sense-circuit">
+<div id="ldr-root">
+  <div class="ldr-shell">
+
+    <header class="ldr-bar">
+      <div class="ldr-title"><h1 id="ldr-h1">LDR Dark-Sensor</h1><p>voltage divider · transistor switch</p></div>
+      <div class="ldr-statebox"><span id="ldr-bigstate" class="ldr-bigstate">LAMP OFF</span></div>
+    </header>
+
+    <div class="ldr-main">
+      <div class="ldr-circuitcard">
+        <svg id="ldr-svg" class="ldr-svg" viewBox="0 0 540 400" xmlns="http://www.w3.org/2000/svg" aria-label="Circuit diagram">
+          <path id="ldr-gDiv" d="M190 50 L190 360" fill="none" stroke="none"/>
+          <path id="ldr-gLamp" d="M360 50 L360 168 L332 193 L332 217 L360 242 L360 360" fill="none" stroke="none"/>
+
+          <!-- rails -->
+          <line x1="70" y1="50" x2="470" y2="50" class="ldr-wire"/>
+          <line x1="70" y1="360" x2="470" y2="360" class="ldr-wire"/>
+          <text x="78" y="42" class="ldr-rail">+6 V</text>
+          <text x="78" y="378" class="ldr-rail">0 V</text>
+
+          <!-- battery -->
+          <line x1="70" y1="50" x2="70" y2="180" class="ldr-wire"/>
+          <line x1="70" y1="230" x2="70" y2="360" class="ldr-wire"/>
+          <line x1="56" y1="180" x2="84" y2="180" class="ldr-batL"/>
+          <line x1="63" y1="194" x2="77" y2="194" class="ldr-batS"/>
+          <line x1="56" y1="208" x2="84" y2="208" class="ldr-batL"/>
+          <line x1="63" y1="222" x2="77" y2="222" class="ldr-batS"/>
+
+          <!-- divider top wire + variable resistor R -->
+          <line x1="190" y1="50" x2="190" y2="92" class="ldr-wire"/>
+          <rect x="176" y="92" width="28" height="58" class="ldr-comp"/>
+          <line x1="160" y1="158" x2="220" y2="86" class="ldr-vararrow"/>
+          <polygon points="220,86 210,87 215,95" class="ldr-vararrowhd"/>
+          <text x="226" y="118" class="ldr-lab">R</text>
+          <text x="226" y="133" class="ldr-sub" id="ldr-Rlab">47 kΩ</text>
+          <line x1="190" y1="150" x2="190" y2="200" class="ldr-wire"/>
+
+          <!-- node A (V_out) -->
+          <circle cx="190" cy="205" r="3.5" class="ldr-node"/>
+          <text x="150" y="200" class="ldr-vout" id="ldr-voutLab">V_out</text>
+          <text x="150" y="216" class="ldr-voutval" id="ldr-voutVal">— V</text>
+
+          <!-- sensor (LDR / thermistor) -->
+          <line x1="190" y1="210" x2="190" y2="252" class="ldr-wire"/>
+          <rect id="ldr-sensorbox" x="176" y="252" width="28" height="58" class="ldr-comp" style="fill:#fef6e6"/>
+          <!-- thermistor diagonal symbol (hidden in LDR mode) -->
+          <path id="ldr-thermdiag" d="M168 320 L178 320 L212 254" class="ldr-diag" style="display:none"/>
+
+          <!-- LDR light source: sun (glow + rays) -->
+          <g id="ldr-lightsrc">
+            <circle id="ldr-glow" cx="110" cy="225" r="34" fill="#f3c623" opacity="0"/>
+            <g id="ldr-sunrays"></g>
+            <circle id="ldr-orb" cx="110" cy="225" r="16" class="ldr-orb"/>
+          </g>
+          <g id="ldr-rays">
+            <line x1="128" y1="238" x2="170" y2="262" class="ldr-ray"/>
+            <line x1="124" y1="252" x2="170" y2="276" class="ldr-ray"/>
+            <line x1="122" y1="266" x2="170" y2="290" class="ldr-ray"/>
+            <polygon points="170,262 160,259 163,269" class="ldr-rayhead"/>
+            <polygon points="170,276 160,273 163,283" class="ldr-rayhead"/>
+            <polygon points="170,290 160,287 163,297" class="ldr-rayhead"/>
+          </g>
+
+          <!-- thermometer (hidden in LDR mode) -->
+          <g id="ldr-thermo" style="display:none">
+            <rect x="104" y="215" width="12" height="84" rx="6" fill="#fff" stroke="#9aa6ab" stroke-width="2"/>
+            <circle cx="110" cy="300" r="13" fill="#fff" stroke="#9aa6ab" stroke-width="2"/>
+            <rect id="ldr-thermofill" x="107" y="255" width="6" height="42" fill="#d6336c"/>
+            <circle id="ldr-thermobulb" cx="110" cy="300" r="9" fill="#d6336c"/>
+          </g>
+
+          <text x="214" y="285" class="ldr-lab" id="ldr-sensorname">LDR</text>
+          <text x="214" y="300" class="ldr-sub" id="ldr-ldrlab">— Ω</text>
+          <line x1="190" y1="310" x2="190" y2="360" class="ldr-wire"/>
+
+          <!-- base resistor + base wire -->
+          <line x1="190" y1="205" x2="236" y2="205" class="ldr-wire"/>
+          <rect x="236" y="191" width="48" height="28" class="ldr-comp"/>
+          <text x="260" y="184" class="ldr-sub" text-anchor="middle">R_B 10k</text>
+          <line x1="284" y1="205" x2="332" y2="205" class="ldr-wire"/>
+          <text x="262" y="236" class="ldr-vbase" id="ldr-vbaseVal" text-anchor="middle">— V</text>
+
+          <!-- transistor (NPN) -->
+          <line x1="332" y1="185" x2="332" y2="225" class="ldr-tbar"/>
+          <line x1="332" y1="193" x2="360" y2="168" class="ldr-wire"/>
+          <line x1="332" y1="217" x2="360" y2="242" class="ldr-wire"/>
+          <polygon points="360,242 349,236 351,247" class="ldr-emit"/>
+          <circle cx="346" cy="205" r="30" class="ldr-tcirc"/>
+          <text x="392" y="210" class="ldr-sub">Tr</text>
+
+          <!-- collector up through output device (lamp / heater) -->
+          <line x1="360" y1="168" x2="360" y2="138" class="ldr-wire"/>
+          <!-- lamp (LDR mode) -->
+          <g id="ldr-lampg">
+            <circle id="ldr-lamp" cx="360" cy="112" r="22" class="ldr-lamp"/>
+            <line x1="349" y1="101" x2="371" y2="123" class="ldr-lampx"/>
+            <line x1="371" y1="101" x2="349" y2="123" class="ldr-lampx"/>
+          </g>
+          <!-- heater (thermistor mode) -->
+          <g id="ldr-heaterg" style="display:none">
+            <rect id="ldr-heater" x="338" y="92" width="44" height="40" rx="3" fill="#fff" stroke="#3a4750" stroke-width="2.2"/>
+            <path d="M346 102 h28 v8 h-28 v8 h28" fill="none" stroke="#b9892a" stroke-width="2.4" stroke-linejoin="round" opacity="0.7"/>
+          </g>
+          <line x1="360" y1="90" x2="360" y2="50" class="ldr-wire"/>
+          <text x="392" y="112" class="ldr-sub" id="ldr-outname">lamp</text>
+
+          <!-- emitter down -->
+          <line x1="360" y1="242" x2="360" y2="360" class="ldr-wire"/>
+
+          <g id="ldr-dots"></g>
+        </svg>
+
+        <div id="ldr-panel" class="ldr-panel">
+          <div class="ldr-row"><span class="l" id="ldr-inputLabel">Light level</span><span id="p-light" class="r">—</span></div>
+          <div class="ldr-row"><span class="l" id="ldr-resLabel">LDR resistance</span><span id="p-ldr" class="r">—</span></div>
+          <div class="ldr-hr"></div>
+          <div class="ldr-row"><span class="l">V across R</span><span id="p-vr" class="r">—</span></div>
+          <div class="ldr-row"><span class="l">V_out (base)</span><span id="p-vout" class="r amber">—</span></div>
+          <div class="ldr-row"><span class="l">Threshold</span><span class="r">0.60 V</span></div>
+          <div class="ldr-hr"></div>
+          <div class="ldr-row"><span class="l">Transistor</span><span id="p-tr" class="r">—</span></div>
+          <div class="ldr-row"><span class="l" id="ldr-lamprow">Lamp</span><span id="p-lamp" class="r green">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ldr-phasebox">
+      <div class="ldr-phaserow" id="ph-bright"><span class="ldr-dot"></span><span></span></div>
+      <div class="ldr-phaserow" id="ph-thresh"><span class="ldr-dot"></span><span></span></div>
+      <div class="ldr-phaserow" id="ph-dark"><span class="ldr-dot"></span><span></span></div>
+    </div>
+
+    <div class="ldr-graphcard">
+      <div class="ldr-graphhead"><span id="ldr-graphtitle">V_out against light level</span><span class="ldr-graphlab">trigger where the curve crosses 0.6 V</span></div>
+      <canvas id="ldr-graph" class="ldr-graph"></canvas>
+    </div>
+
+    <div class="ldr-controls">
+      <div class="ldr-ctl ldr-toggle">
+        <button id="ldr-sensorbtn" class="ldr-tbtn ldr-on">Sensor: LDR (light)</button>
+        <span class="ldr-hint">Switch the transducer — the divider and transistor switch stay identical.</span>
+      </div>
+      <div class="ldr-ctl">
+        <label><span id="ldr-LlabelText">Light level (drag toward dark →)</span> <span id="ldr-Lout">80 %</span></label>
+        <input id="ldr-L" type="range" min="0" max="100" step="1" value="80">
+      </div>
+      <div class="ldr-ctl">
+        <label>Variable resistor R — sets the trigger level <span id="ldr-Rout">47 kΩ</span></label>
+        <input id="ldr-R" type="range" min="0" max="100" step="1" value="60">
+      </div>
+    </div>
+
+  </div>
+
+<style>
+  #ldr-root{
+    --ink:#16222c; --soft:#5a6770; --line:#ccd6dd;
+    --paper:#eef2f5; --card:#fbfcfd; --edge:#dde5ea;
+    --teal:#0e8c86; --teal-d:#0a615d; --teal-soft:#d6ecea;
+    --rose:#d6336c; --amber:#d98a16; --blue:#2f6fb0; --green:#1f9d57;
+    --wire:#3a4750;
+    --sans:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Consolas,monospace;
+    box-sizing:border-box; font-family:var(--sans); color:var(--ink);
+    background:var(--paper); line-height:1.5; min-height:560px;
+  }
+  #ldr-root *{ box-sizing:border-box; }
+  #ldr-root .ldr-shell{ max-width:920px; margin:0 auto; padding:14px; }
+
+  #ldr-root .ldr-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:linear-gradient(150deg,#15303a,#0e242c); color:#fff;
+    padding:14px 18px; border-radius:12px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 18px rgba(12,30,36,.18);
+  }
+  #ldr-root .ldr-title h1{ margin:0; font-size:20px; font-weight:700; letter-spacing:-.01em; }
+  #ldr-root .ldr-title p{ margin:2px 0 0; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#bfe1de; }
+  #ldr-root .ldr-bigstate{ font-family:var(--mono); font-size:14px; font-weight:700; padding:7px 13px; border-radius:8px; background:rgba(255,255,255,.08); color:#cfe6e6; letter-spacing:.04em; }
+  #ldr-root .ldr-bigstate.on{ background:#f3c623; color:#3a2e00; }
+
+  #ldr-root .ldr-main{ margin:14px 0; }
+  #ldr-root .ldr-circuitcard{ position:relative; background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:10px; }
+  #ldr-root .ldr-svg{ display:block; width:74%; max-width:600px; height:auto; }
+  @media (max-width:680px){ #ldr-root .ldr-svg{ width:100%; } }
+
+  #ldr-root .ldr-wire{ stroke:var(--wire); stroke-width:2.2; fill:none; stroke-linecap:round; }
+  #ldr-root .ldr-comp{ fill:#fff; stroke:var(--wire); stroke-width:2.2; }
+  #ldr-root .ldr-diag{ stroke:var(--wire); stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  #ldr-root .ldr-vararrow{ stroke:var(--wire); stroke-width:2; fill:none; stroke-linecap:round; }
+  #ldr-root .ldr-vararrowhd{ fill:var(--wire); }
+  #ldr-root .ldr-batL{ stroke:var(--wire); stroke-width:2.4; }
+  #ldr-root .ldr-batS{ stroke:var(--wire); stroke-width:5; }
+  #ldr-root .ldr-node{ fill:var(--wire); }
+  #ldr-root .ldr-tbar{ stroke:var(--wire); stroke-width:4; stroke-linecap:round; }
+  #ldr-root .ldr-tcirc{ fill:none; stroke:var(--wire); stroke-width:1.6; opacity:.5; }
+  #ldr-root .ldr-emit{ fill:var(--wire); }
+  #ldr-root .ldr-lampx{ stroke:#b9892a; stroke-width:2; opacity:.5; }
+  #ldr-root .ldr-rail{ font:700 12px var(--mono); fill:var(--soft); }
+  #ldr-root .ldr-lab{ font:700 14px var(--sans); fill:var(--ink); }
+  #ldr-root .ldr-sub{ font:600 11px var(--mono); fill:var(--soft); }
+  #ldr-root .ldr-vout{ font:700 12px var(--mono); fill:var(--amber); text-anchor:end; }
+  #ldr-root .ldr-voutval{ font:700 14px var(--mono); fill:var(--amber); text-anchor:end; }
+  #ldr-root .ldr-vbase{ font:700 12px var(--mono); fill:var(--soft); }
+  #ldr-root .ldr-ray{ stroke:#e6a91e; stroke-width:2.4; stroke-linecap:round; }
+  #ldr-root .ldr-rayhead{ fill:#e6a91e; }
+  #ldr-root .ldr-orb{ fill:#f3c623; stroke:#d99a16; stroke-width:1.5; }
+
+  #ldr-root .ldr-panel{
+    position:absolute; top:14px; right:14px; width:188px; z-index:4;
+    background:rgba(251,252,253,.97); border:1px solid var(--edge); border-radius:10px;
+    padding:9px 12px; box-shadow:0 4px 16px rgba(20,40,50,.16);
+  }
+  #ldr-root .ldr-row{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 0; }
+  #ldr-root .ldr-row .l{ font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--soft); white-space:nowrap; }
+  #ldr-root .ldr-row .r{ font-family:var(--mono); font-size:12.5px; font-weight:700; color:var(--ink); text-align:right; white-space:nowrap; }
+  #ldr-root .ldr-row .r.amber{ color:var(--amber); }
+  #ldr-root .ldr-row .r.green{ color:var(--green); }
+  #ldr-root .ldr-hr{ height:1px; background:var(--edge); margin:5px 0; }
+
+  #ldr-root .ldr-phasebox{ background:#eef3f5; border-radius:8px; padding:6px; margin-bottom:14px; }
+  #ldr-root .ldr-phaserow{ display:flex; gap:9px; align-items:flex-start; font-size:12px; color:#8a969d; padding:6px 9px; border-radius:6px; border-left:3px solid transparent; transition:background .15s,color .15s,border-color .15s; }
+  #ldr-root .ldr-phaserow b{ color:#6c777e; }
+  #ldr-root .ldr-phaserow.on{ background:#fff; border-left-color:var(--teal); color:var(--ink); box-shadow:0 1px 5px rgba(20,40,50,.08); }
+  #ldr-root .ldr-phaserow.on b{ color:var(--teal-d); }
+  #ldr-root .ldr-dot{ width:9px; height:9px; border-radius:50%; background:#cbd6da; margin-top:4px; flex:0 0 auto; }
+  #ldr-root .ldr-phaserow.on .ldr-dot{ background:var(--teal); box-shadow:0 0 0 3px var(--teal-soft); }
+
+  #ldr-root .ldr-graphcard{ background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:10px 12px 12px; margin-bottom:14px; }
+  #ldr-root .ldr-graphhead{ display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700; color:var(--soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+  #ldr-root .ldr-graphlab{ font-family:var(--mono); font-weight:600; color:var(--teal-d); text-transform:none; letter-spacing:0; }
+  #ldr-root .ldr-graph{ display:block; width:100%; height:170px; background:#fff; border:1px solid var(--edge); border-radius:8px; }
+
+  #ldr-root .ldr-controls{ display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:14px 16px; }
+  #ldr-root .ldr-ctl label{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; color:var(--soft); margin-bottom:4px; }
+  #ldr-root .ldr-ctl label span{ font-family:var(--mono); color:var(--teal-d); }
+  #ldr-root .ldr-ctl input[type=range]{ width:100%; accent-color:var(--teal); }
+  #ldr-root .ldr-toggle{ grid-column:1 / -1; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  #ldr-root .ldr-tbtn{ font:600 13px var(--sans); color:#fff; background:var(--teal); border:1px solid var(--teal-d); border-radius:8px; padding:8px 14px; cursor:pointer; }
+  #ldr-root .ldr-tbtn:hover{ filter:brightness(1.07); }
+  #ldr-root .ldr-tbtn.ldr-on{ background:var(--amber); border-color:#b96f12; }
+  #ldr-root .ldr-hint{ font-size:11.5px; color:var(--soft); }
+
+  @media (max-width:680px){
+    #ldr-root .ldr-controls{ grid-template-columns:1fr; }
+    #ldr-root .ldr-panel{ position:static; width:auto; margin-top:10px; box-shadow:none; }
+    #ldr-root .ldr-circuitcard{ display:flex; flex-direction:column; }
+  }
+</style>
+
+<script>
+(function(){
+  var root=document.getElementById('ldr-root'); if(!root) return;
+  var $=function(id){ return document.getElementById(id); };
+  var SVGNS='http://www.w3.org/2000/svg';
+
+  var Vs=6.0, VBE_TH=0.60;
+  var sval=80, Rpct=60, sensor='ldr', curPhase='';
+
+  function Rtop(){ return Math.round(1000*Math.pow(470,Rpct/100)); }
+  // sensor resistance — both fall as the input (light / temperature) rises
+  function Rsensor(v){
+    return sensor==='ldr' ? Math.pow(10, 6 - 0.04*v)    // dark 1MΩ … bright 100Ω
+                          : Math.pow(10, 5 - 0.03*v);    // cold 100kΩ … hot 100Ω
+  }
+  function tempC(v){ return v*0.5; }                     // slider 0..100 → 0..50 °C
+
+  function fmtOhm(r){
+    if(r>=1e6) return (r/1e6).toFixed(2)+' MΩ';
+    if(r>=1e3) return (r/1e3).toFixed(r>=1e5?0:1)+' kΩ';
+    return Math.round(r)+' Ω';
+  }
+  function smooth(a,b,x){ if(x<=a) return 0; if(x>=b) return 1; var t=(x-a)/(b-a); return t*t*(3-2*t); }
+
+  // ---------- sun rays ----------
+  var sunRaysG=$('ldr-sunrays'), ORBx=110, ORBy=225, sunRayEls=[];
+  (function(){
+    for(var i=0;i<8;i++){
+      var a=i/8*2*Math.PI, ln=document.createElementNS(SVGNS,'line');
+      ln.setAttribute('x1',ORBx+Math.cos(a)*20); ln.setAttribute('y1',ORBy+Math.sin(a)*20);
+      ln.setAttribute('x2',ORBx+Math.cos(a)*20); ln.setAttribute('y2',ORBy+Math.sin(a)*20);
+      ln.setAttribute('stroke','#f3c623'); ln.setAttribute('stroke-width','2.6'); ln.setAttribute('stroke-linecap','round');
+      ln.dataset.a=a; sunRaysG.appendChild(ln); sunRayEls.push(ln);
+    }
+  })();
+  function updateLightSource(v){
+    var t=v/100, orb=$('ldr-orb'), glow=$('ldr-glow'), rays=$('ldr-rays');
+    orb.style.fill='rgb('+Math.round(205+38*t)+','+Math.round(150+48*t)+','+Math.round(205-160*t)+')';
+    orb.style.stroke = t>0.25 ? '#d99a16' : '#9fb0c4';
+    glow.setAttribute('opacity',(0.28*t).toFixed(3)); glow.setAttribute('r',(26+18*t).toFixed(1));
+    sunRayEls.forEach(function(ln){
+      var a=parseFloat(ln.dataset.a), inner=19, outer=19+13*t;
+      ln.setAttribute('x1',(ORBx+Math.cos(a)*inner).toFixed(1)); ln.setAttribute('y1',(ORBy+Math.sin(a)*inner).toFixed(1));
+      ln.setAttribute('x2',(ORBx+Math.cos(a)*outer).toFixed(1)); ln.setAttribute('y2',(ORBy+Math.sin(a)*outer).toFixed(1));
+      ln.setAttribute('opacity',(0.15+0.85*t).toFixed(2));
+    });
+    rays.setAttribute('opacity',(0.08+0.92*t).toFixed(2));
+  }
+  function updateThermo(v){
+    var t=v/100, fill=$('ldr-thermofill'), bulb=$('ldr-thermobulb');
+    var topY=296-(296-220)*t;
+    fill.setAttribute('y',topY.toFixed(1)); fill.setAttribute('height',(296-topY).toFixed(1));
+    var col='rgb('+Math.round(60+195*t)+','+Math.round(120-60*t)+','+Math.round(200-150*t)+')';
+    fill.setAttribute('fill',col); bulb.setAttribute('fill',col);
+  }
+
+  // ---------- phase strip text ----------
+  function setPhaseText(ldr){
+    var rows={
+      ldr:[
+        '<b>Bright</b> — LDR resistance low, so most of the 6 V is across R; V_out is low → V_BE below 0.6 V → transistor <b>off</b>, lamp dark.',
+        '<b>At the trigger point</b> — as it dims, the LDR\u2019s share of the supply rises until V_out \u2248 0.6 V; the transistor just begins to conduct.',
+        '<b>Dark</b> — LDR resistance high, taking most of the 6 V; V_out is high → V_BE above 0.6 V → transistor <b>on</b>, lamp lit.'
+      ],
+      ntc:[
+        '<b>Warm</b> — thermistor resistance low, so most of the 6 V is across R; V_out is low → V_BE below 0.6 V → transistor <b>off</b>, lamp dark.',
+        '<b>At the trigger point</b> — as it cools, the thermistor\u2019s resistance rises until V_out \u2248 0.6 V; the transistor just begins to conduct.',
+        '<b>Cold</b> — thermistor resistance high, taking most of the 6 V; V_out is high → V_BE above 0.6 V → transistor <b>on</b>, lamp lit.'
+      ]
+    };
+    var set=ldr?rows.ldr:rows.ntc;
+    $('ph-bright').children[1].innerHTML=set[0];
+    $('ph-thresh').children[1].innerHTML=set[1];
+    $('ph-dark').children[1].innerHTML=set[2];
+  }
+
+  // ---------- current dots ----------
+  var dotsG=$('ldr-dots'), gDiv=$('ldr-gDiv'), gLamp=$('ldr-gLamp');
+  var lenDiv=gDiv.getTotalLength(), lenLamp=gLamp.getTotalLength();
+  var dotStyle=document.createElementNS(SVGNS,'style');
+  dotStyle.textContent='.cdot{fill:#d98a16} .cdotL{fill:#1f9d57}'; dotsG.appendChild(dotStyle);
+  function makeDots(n,cls){ var a=[]; for(var i=0;i<n;i++){ var c=document.createElementNS(SVGNS,'circle'); c.setAttribute('r','3.4'); c.setAttribute('class',cls); dotsG.appendChild(c); a.push(c); } return a; }
+  var divDots=makeDots(6,'cdot'), lampDots=makeDots(6,'cdotL'), flow=0;
+  function moveDots(dots,path,len,offset,show){
+    var sp=len/dots.length;
+    dots.forEach(function(d,i){
+      if(!show){ d.setAttribute('opacity','0'); return; }
+      var dist=((offset+i*sp)%len+len)%len, p=path.getPointAtLength(dist);
+      d.setAttribute('cx',p.x); d.setAttribute('cy',p.y); d.setAttribute('opacity','1');
+    });
+  }
+
+  // ---------- graph ----------
+  var gcan=$('ldr-graph'), gctx=gcan.getContext('2d'), DPR=Math.min(2,window.devicePixelRatio||1);
+  var gW=600,gH=170;
+  function sizeGraph(){ gW=gcan.clientWidth||600; gH=gcan.clientHeight||170; gcan.width=Math.round(gW*DPR); gcan.height=Math.round(gH*DPR); gctx.setTransform(DPR,0,0,DPR,0,0); }
+  function drawGraph(){
+    var padL=44,padR=12,padT=12,padB=26, R=Rtop();
+    var pw=gW-padL-padR, ph=gH-padT-padB;
+    function sx(v){ return padL + v/100*pw; }
+    function sy(v){ return padT + (1-v/Vs)*ph; }
+    gctx.clearRect(0,0,gW,gH); gctx.fillStyle='#fff'; gctx.fillRect(0,0,gW,gH);
+    var Lc=null;
+    for(var L=0;L<=100;L+=0.5){ var v=Vs*Rsensor(L)/(R+Rsensor(L)); if(v<=VBE_TH){ Lc=L; break; } }
+    if(Lc!==null && Lc>0){ gctx.fillStyle='rgba(243,198,35,.16)'; gctx.fillRect(sx(0),padT,sx(Lc)-sx(0),ph); }
+    gctx.strokeStyle='#eef3f4'; gctx.lineWidth=1;
+    for(var gx=0;gx<=100;gx+=20){ gctx.beginPath(); gctx.moveTo(sx(gx),padT); gctx.lineTo(sx(gx),padT+ph); gctx.stroke(); }
+    for(var gv=0;gv<=Vs;gv+=1){ gctx.beginPath(); gctx.moveTo(padL,sy(gv)); gctx.lineTo(padL+pw,sy(gv)); gctx.stroke(); }
+    gctx.strokeStyle='#16222c'; gctx.lineWidth=1.4; gctx.beginPath(); gctx.moveTo(padL,padT); gctx.lineTo(padL,padT+ph); gctx.lineTo(padL+pw,padT+ph); gctx.stroke();
+    gctx.fillStyle='#5a6770'; gctx.font='10px ui-monospace,monospace';
+    gctx.textAlign='right'; gctx.textBaseline='middle';
+    for(gv=0;gv<=Vs;gv+=2){ gctx.fillText(gv+'V', padL-5, sy(gv)); }
+    gctx.textAlign='center'; gctx.textBaseline='top';
+    var loLab=sensor==='ldr'?'dark':'cold', midLab=sensor==='ldr'?'light level':'temperature', hiLab=sensor==='ldr'?'bright':'hot';
+    gctx.fillText(loLab, sx(6), padT+ph+5); gctx.fillText(midLab, sx(50), padT+ph+5); gctx.fillText(hiLab, sx(94), padT+ph+5);
+    gctx.strokeStyle='#d6336c'; gctx.setLineDash([5,4]); gctx.lineWidth=1.4;
+    gctx.beginPath(); gctx.moveTo(padL,sy(VBE_TH)); gctx.lineTo(padL+pw,sy(VBE_TH)); gctx.stroke(); gctx.setLineDash([]);
+    gctx.fillStyle='#d6336c'; gctx.textAlign='left'; gctx.textBaseline='bottom'; gctx.fillText('0.6 V', padL+4, sy(VBE_TH)-2);
+    gctx.strokeStyle='#0e8c86'; gctx.lineWidth=2.4; gctx.beginPath();
+    for(L=0;L<=100;L+=1){ var vv=Vs*Rsensor(L)/(R+Rsensor(L)); var X=sx(L),Y=sy(vv); if(L===0)gctx.moveTo(X,Y); else gctx.lineTo(X,Y); }
+    gctx.stroke();
+    var vNow=Vs*Rsensor(sval)/(R+Rsensor(sval));
+    gctx.strokeStyle='#16222c'; gctx.lineWidth=1; gctx.setLineDash([3,3]);
+    gctx.beginPath(); gctx.moveTo(sx(sval),padT); gctx.lineTo(sx(sval),padT+ph); gctx.stroke(); gctx.setLineDash([]);
+    gctx.beginPath(); gctx.arc(sx(sval),sy(vNow),4.5,0,2*Math.PI); gctx.fillStyle='#16222c'; gctx.fill();
+  }
+
+  // ---------- recompute ----------
+  function recompute(){
+    var R=Rtop(), rl=Rsensor(sval);
+    var vout=Vs*rl/(R+rl), vr=Vs-vout, on=vout>=VBE_TH;
+    var bright=smooth(0.55,0.72,vout);
+    var vbase=vout; // R_B carries negligible current from the high-impedance divider
+
+    $('p-light').textContent = sensor==='ldr' ? sval+' %' : tempC(sval).toFixed(0)+' °C';
+    $('p-ldr').textContent=fmtOhm(rl);
+    $('p-vr').textContent=vr.toFixed(2)+' V';
+    $('p-vout').textContent=vout.toFixed(2)+' V';
+    var devName = sensor==='ldr' ? 'LAMP' : 'HEATER';
+    $('p-tr').textContent=on?'ON (conducting)':'off';
+    $('p-lamp').textContent=on?'ON':'off'; $('p-lamp').className='r '+(on?'green':'');
+    $('ldr-lamprow').textContent = sensor==='ldr' ? 'Lamp' : 'Heater';
+    $('ldr-ldrlab').textContent=fmtOhm(rl);
+    $('ldr-Rlab').textContent=fmtOhm(R); $('ldr-Rout').textContent=fmtOhm(R);
+
+    var voutEl=$('ldr-voutVal'); voutEl.textContent=vout.toFixed(2)+' V';
+    voutEl.style.fill = on ? '#1f9d57' : '#d98a16';
+    $('ldr-voutLab').style.fill = on ? '#1f9d57' : '#d98a16';
+    var vbEl=$('ldr-vbaseVal'); vbEl.textContent='V_B '+vbase.toFixed(2)+' V';
+    vbEl.style.fill = on ? '#1f9d57' : '#5a6770';
+
+    var big=$('ldr-bigstate'); big.textContent=(on?devName+' ON':devName+' OFF'); big.classList.toggle('on',on);
+
+    if(sensor==='ldr'){
+      var lamp=$('ldr-lamp');
+      lamp.style.fill='rgb('+Math.round(90+165*bright)+','+Math.round(90+108*bright)+','+Math.round(58+5*bright)+')';
+      lamp.style.stroke=on?'#d99a16':'#9aa6ab';
+    } else {
+      var htr=$('ldr-heater');
+      htr.style.fill='rgb('+Math.round(245+10*bright)+','+Math.round(245-150*bright)+','+Math.round(245-200*bright)+')';
+      htr.style.stroke=on?'#c0392b':'#9aa6ab';
+    }
+
+    if(sensor==='ldr') updateLightSource(sval); else updateThermo(sval);
+
+    var phase = vout>=VBE_TH+0.06 ? 'dark' : (vout<=VBE_TH-0.12 ? 'bright' : 'thresh');
+    if(phase!==curPhase){
+      curPhase=phase;
+      $('ph-bright').classList.toggle('on',phase==='bright');
+      $('ph-thresh').classList.toggle('on',phase==='thresh');
+      $('ph-dark').classList.toggle('on',phase==='dark');
+    }
+    drawGraph();
+    return on;
+  }
+
+  // ---------- sensor toggle ----------
+  function applySensor(){
+    var ldr=(sensor==='ldr');
+    $('ldr-lightsrc').style.display=ldr?'':'none';
+    $('ldr-rays').style.display=ldr?'':'none';
+    $('ldr-thermo').style.display=ldr?'none':'';
+    $('ldr-thermdiag').style.display=ldr?'none':'';
+    $('ldr-sensorbox').style.fill=ldr?'#fef6e6':'#eef3f8';
+    $('ldr-sensorname').textContent=ldr?'LDR':'Thermistor';
+    $('ldr-sensorbtn').textContent=ldr?'Sensor: LDR (light)':'Sensor: thermistor (temp)';
+    $('ldr-h1').textContent=ldr?'LDR Dark-Sensor':'Thermistor Cold-Sensor';
+    $('ldr-LlabelText').textContent=ldr?'Light level (drag toward dark →)':'Temperature (drag toward cold →)';
+    $('ldr-inputLabel').textContent=ldr?'Light level':'Temperature';
+    $('ldr-resLabel').textContent=ldr?'LDR resistance':'Thermistor resistance';
+    $('ldr-graphtitle').textContent=ldr?'V_out against light level':'V_out against temperature';
+    $('ldr-lampg').style.display=ldr?'':'none';
+    $('ldr-heaterg').style.display=ldr?'none':'';
+    $('ldr-outname').textContent=ldr?'lamp':'heater';
+    $('ldr-Lout').textContent = ldr ? sval+' %' : tempC(sval).toFixed(0)+' °C';
+    setPhaseText(ldr);
+    curPhase='';
+    lampOnNow=recompute();
+  }
+
+  // ---------- animation ----------
+  var lampOnNow=false, last=performance.now();
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now; flow+=dt*60;
+    moveDots(divDots,gDiv,lenDiv,flow,true);
+    moveDots(lampDots,gLamp,lenLamp,flow,lampOnNow);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---------- controls ----------
+  $('ldr-L').addEventListener('input',function(){ sval=parseInt(this.value,10); $('ldr-Lout').textContent= sensor==='ldr' ? sval+' %' : tempC(sval).toFixed(0)+' °C'; lampOnNow=recompute(); });
+  $('ldr-R').addEventListener('input',function(){ Rpct=parseInt(this.value,10); lampOnNow=recompute(); });
+  $('ldr-sensorbtn').addEventListener('click',function(){ sensor=(sensor==='ldr')?'ntc':'ldr'; applySensor(); });
+
+  // ---------- init ----------
+  sizeGraph(); setPhaseText(true); applySensor();
+  var ro=new ResizeObserver(function(){ sizeGraph(); drawGraph(); }); ro.observe(gcan);
+})();
+</script>
+</div>
+  </div><!-- /sense-circuit -->
+
+  <div class="sense-view" id="sense-carrier" style="display:none">
+<div id="csm-root">
+  <div class="csm-shell">
+
+    <header class="csm-bar">
+      <div class="csm-title"><h1>Charge Carriers &amp; Resistance</h1><p>why the LDR / thermistor resistance falls</p></div>
+      <div class="csm-runbox"><button id="csm-run" class="csm-btn">Pause</button></div>
+    </header>
+
+    <nav class="csm-tabs" role="tablist">
+      <button class="csm-tab csm-active" data-mode="ldr" role="tab">LDR — light absorbed</button>
+      <button class="csm-tab" data-mode="ntc" role="tab">Thermistor — heat absorbed</button>
+    </nav>
+
+    <div class="csm-stagewrap">
+      <canvas id="csm-canvas" class="csm-canvas"></canvas>
+      <div id="csm-panel" class="csm-panel">
+        <div class="csm-row"><span class="l" id="csm-inLab">Light intensity</span><span id="csm-inVal" class="r">—</span></div>
+        <div class="csm-hr"></div>
+        <div class="csm-row"><span class="l">Charge carriers</span><span id="csm-n" class="r teal">—</span></div>
+        <div class="csm-row"><span class="l">Current (∝ carriers)</span><span id="csm-I" class="r">—</span></div>
+        <div class="csm-row"><span class="l">Resistance (∝ 1/carriers)</span><span id="csm-R" class="r amber">—</span></div>
+        <div class="csm-rbarwrap"><div id="csm-rbar" class="csm-rbar"></div></div>
+      </div>
+    </div>
+
+    <div class="csm-legend">
+      <span><i class="csm-sw csm-el"></i> free electron (−)</span>
+      <span><i class="csm-sw csm-ho"></i> hole (+)</span>
+      <span><i class="csm-sw csm-en" id="csm-enSw"></i> <span id="csm-enLab">photon (energy ≥ E_g)</span></span>
+      <span><i class="csm-sw csm-at"></i> lattice atom</span>
+    </div>
+
+    <div class="csm-steps">
+      <div class="csm-step" id="st1"><span class="csm-num">1</span><span id="csm-st1">Energy in — a photon with energy at least the band gap is absorbed by the crystal.</span></div>
+      <div class="csm-step" id="st2"><span class="csm-num">2</span><span>Electron promoted — it gains enough energy to jump the band gap, from the valence band up to the conduction band.</span></div>
+      <div class="csm-step" id="st3"><span class="csm-num">3</span><span>Pair created — the freed electron leaves behind a positive hole; both are mobile charge carriers.</span></div>
+      <div class="csm-step" id="st4"><span class="csm-num">4</span><span>Resistance falls — more carriers means more current for the same p.d., so resistance drops (R ∝ 1/n).</span></div>
+    </div>
+
+    <div class="csm-controls">
+      <div class="csm-ctl">
+        <label><span id="csm-slabel">Light intensity</span> <span id="csm-sout">60 %</span></label>
+        <input id="csm-slider" type="range" min="0" max="100" step="1" value="60">
+      </div>
+    </div>
+
+  </div>
+
+<style>
+  #csm-root{
+    --ink:#16222c; --soft:#5a6770; --edge:#dde5ea; --card:#fbfcfd; --paper:#eef2f5;
+    --teal:#0e8c86; --teal-d:#0a615d; --teal-soft:#d6ecea;
+    --amber:#d98a16; --rose:#d6336c; --blue:#2f6fb0; --green:#1f9d57;
+    --el:#2f6fb0; --ho:#d6336c;
+    --sans:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Consolas,monospace;
+    box-sizing:border-box; font-family:var(--sans); color:var(--ink); background:var(--paper); line-height:1.5; min-height:520px;
+  }
+  #csm-root *{ box-sizing:border-box; }
+  #csm-root .csm-shell{ max-width:920px; margin:0 auto; padding:14px; }
+
+  #csm-root .csm-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:linear-gradient(150deg,#15303a,#0e242c); color:#fff; padding:14px 18px; border-radius:12px; box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 18px rgba(12,30,36,.18); }
+  #csm-root .csm-title h1{ margin:0; font-size:20px; font-weight:700; letter-spacing:-.01em; }
+  #csm-root .csm-title p{ margin:2px 0 0; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#bfe1de; }
+  #csm-root .csm-btn{ font:600 13.5px var(--sans); color:#fff; background:var(--teal); border:1px solid var(--teal-d); border-radius:8px; padding:8px 14px; cursor:pointer; }
+  #csm-root .csm-btn:hover{ filter:brightness(1.07); }
+
+  #csm-root .csm-tabs{ display:flex; gap:6px; margin:14px 0 0; }
+  #csm-root .csm-tab{ font:600 13.5px var(--sans); color:var(--soft); background:var(--card); border:1px solid var(--edge); border-radius:9px 9px 0 0; padding:9px 15px; cursor:pointer; }
+  #csm-root .csm-tab:hover{ color:var(--ink); }
+  #csm-root .csm-tab.csm-active{ color:#fff; background:var(--teal); border-color:var(--teal-d); }
+
+  #csm-root .csm-stagewrap{ display:grid; grid-template-columns:1fr 212px; gap:12px; align-items:start; }
+  #csm-root .csm-canvas{ display:block; width:100%; aspect-ratio:16/10; min-height:330px; max-height:460px; background:#fff; border:1px solid var(--edge); border-radius:0 12px 12px 12px; }
+  #csm-root .csm-panel{ background:#fbfcfd; border:1px solid var(--edge); border-radius:10px; padding:11px 13px; }
+  #csm-root .csm-row{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 0; }
+  #csm-root .csm-row .l{ font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--soft); white-space:nowrap; }
+  #csm-root .csm-row .r{ font-family:var(--mono); font-size:13px; font-weight:700; }
+  #csm-root .csm-row .r.teal{ color:var(--teal-d); }
+  #csm-root .csm-row .r.amber{ color:var(--amber); }
+  #csm-root .csm-hr{ height:1px; background:var(--edge); margin:5px 0; }
+  #csm-root .csm-rbarwrap{ height:8px; background:#eef3f4; border-radius:5px; margin-top:7px; overflow:hidden; }
+  #csm-root .csm-rbar{ height:100%; width:80%; background:linear-gradient(90deg,var(--amber),#f0b44e); border-radius:5px; transition:width .15s; }
+
+  #csm-root .csm-legend{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:8px; font-size:12.5px; color:var(--soft); }
+  #csm-root .csm-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  #csm-root .csm-sw{ width:13px; height:13px; border-radius:50%; display:inline-block; }
+  #csm-root .csm-el{ background:var(--el); }
+  #csm-root .csm-ho{ background:#fff; border:2px solid var(--ho); }
+  #csm-root .csm-en{ background:#eab308; }
+  #csm-root .csm-at{ background:#c3ccd2; }
+
+  #csm-root .csm-steps{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0 14px; }
+  #csm-root .csm-step{ display:flex; gap:9px; align-items:flex-start; font-size:12px; color:var(--soft); background:var(--card); border:1px solid var(--edge); border-radius:9px; padding:9px 11px; }
+  #csm-root .csm-num{ flex:0 0 auto; width:20px; height:20px; border-radius:50%; background:var(--teal-soft); color:var(--teal-d); font:700 12px var(--mono); display:flex; align-items:center; justify-content:center; }
+  #csm-root .csm-step.flash{ border-color:var(--teal); box-shadow:0 0 0 3px var(--teal-soft); }
+
+  #csm-root .csm-controls{ background:var(--card); border:1px solid var(--edge); border-radius:12px; padding:14px 16px; }
+  #csm-root .csm-ctl label{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; color:var(--soft); margin-bottom:4px; }
+  #csm-root .csm-ctl label span{ font-family:var(--mono); color:var(--teal-d); }
+  #csm-root .csm-ctl input[type=range]{ width:100%; accent-color:var(--teal); }
+
+  @media (max-width:680px){
+    #csm-root .csm-steps{ grid-template-columns:1fr; }
+    #csm-root .csm-stagewrap{ grid-template-columns:1fr; }
+    #csm-root .csm-canvas{ aspect-ratio:4/3; border-radius:0 12px 0 0; }
+  }
+</style>
+
+<script>
+(function(){
+  var root=document.getElementById('csm-root'); if(!root) return;
+  var $=function(id){ return document.getElementById(id); };
+  var canvas=$('csm-canvas'), ctx=canvas.getContext('2d');
+  var DPR=Math.min(2,window.devicePixelRatio||1);
+
+  var mode='ldr', intensity=60, running=true;
+  var W=800,H=450;
+  var electrons=[], holes=[], photons=[], promos=[], flashes=[];
+  var genAcc=0, vibPhase=0, st1flash=0;
+  var atoms=[], COLS=7, ROWS=4, mat={}, band={};
+
+  function layout(){
+    mat.x0=24; mat.x1=W*0.57; mat.y0=46; mat.y1=H-22;
+    band.x0=W*0.62; band.x1=W-20; band.y0=52; band.y1=H-30;
+    band.cbY=band.y0+34; band.vbY=band.y1-30;
+    atoms=[]; var padX=46, padY=42;
+    for(var r=0;r<ROWS;r++){ for(var c=0;c<COLS;c++){
+      var x=mat.x0+padX + (mat.x1-mat.x0-2*padX)*(COLS>1?c/(COLS-1):0.5);
+      var y=mat.y0+padY + (mat.y1-mat.y0-2*padY)*(ROWS>1?r/(ROWS-1):0.5);
+      atoms.push({x:x,y:y});
+    }}
+  }
+  function size(){ W=canvas.clientWidth||800; H=canvas.clientHeight||450; canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0); layout(); }
+  function rnd(a,b){ return a+Math.random()*(b-a); }
+  function randAtom(){ return atoms[(Math.random()*atoms.length)|0]; }
+  function genRate(){ var x=intensity/100; if(mode==='ldr') return 0.4+16*x; return 0.4+30*Math.pow(x,2.4); }
+  var NCAP=46;
+  function spawnPair(ax,ay){
+    if(electrons.length>=NCAP) return;
+    electrons.push({x:ax+rnd(-6,6),y:ay+rnd(-6,6),vx:rnd(20,50),vy:rnd(-30,30)});
+    holes.push({x:ax+rnd(-6,6),y:ay+rnd(-6,6),vx:rnd(-50,-20),vy:rnd(-30,30)});
+    promos.push({x:rnd(band.x0+20,band.x1-20),t:0});
+    flashes.push({x:ax,y:ay,t:0,col:mode==='ldr'?'#eab308':'#e0552b'});
+    st1flash=0.5;
+  }
+  function step(dt){
+    vibPhase+=dt*6;
+    if(mode==='ldr'){
+      genAcc+=genRate()*dt;
+      while(genAcc>=1){ genAcc-=1; if(photons.length<26){ var tgt=randAtom(); photons.push({x:rnd(mat.x0-10,mat.x0+30),y:mat.y0-rnd(6,28),tx:tgt.x,ty:tgt.y}); } }
+      for(var p=photons.length-1;p>=0;p--){ var ph=photons[p],dx=ph.tx-ph.x,dy=ph.ty-ph.y,d=Math.hypot(dx,dy),sp=320*dt;
+        if(d<sp){ spawnPair(ph.tx,ph.ty); photons.splice(p,1); } else { ph.x+=dx/d*sp; ph.y+=dy/d*sp; } }
+    } else {
+      genAcc+=genRate()*dt; while(genAcc>=1){ genAcc-=1; var a=randAtom(); spawnPair(a.x,a.y); }
+    }
+    var n=electrons.length, recRate=0.020*n*n*dt;
+    while(recRate>0){
+      if((recRate>=1||Math.random()<recRate)&&electrons.length>0&&holes.length>0){
+        var ei=(Math.random()*electrons.length)|0, hi=(Math.random()*holes.length)|0, e=electrons[ei];
+        flashes.push({x:e.x,y:e.y,t:0,col:'#9aa6ab'}); electrons.splice(ei,1); holes.splice(hi,1);
+      }
+      recRate-=1;
+    }
+    function moveSet(arr){ for(var i=0;i<arr.length;i++){ var q=arr[i];
+      q.vx+=rnd(-40,40)*dt; q.vy+=rnd(-40,40)*dt; q.vx=Math.max(-90,Math.min(90,q.vx)); q.vy=Math.max(-70,Math.min(70,q.vy)); q.x+=q.vx*dt; q.y+=q.vy*dt;
+      if(q.x<mat.x0+8){ q.x=mat.x0+8; q.vx=Math.abs(q.vx); } if(q.x>mat.x1-8){ q.x=mat.x1-8; q.vx=-Math.abs(q.vx); }
+      if(q.y<mat.y0+8){ q.y=mat.y0+8; q.vy=Math.abs(q.vy); } if(q.y>mat.y1-8){ q.y=mat.y1-8; q.vy=-Math.abs(q.vy); } } }
+    moveSet(electrons); moveSet(holes);
+    for(var k=promos.length-1;k>=0;k--){ promos[k].t+=dt*2.2; if(promos[k].t>1) promos.splice(k,1); }
+    for(var f=flashes.length-1;f>=0;f--){ flashes[f].t+=dt*3; if(flashes[f].t>1) flashes.splice(f,1); }
+    if(st1flash>0) st1flash-=dt;
+  }
+  function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f3f7f8'; ctx.strokeStyle='#cdd9dd'; ctx.lineWidth=1.5; roundRect(mat.x0,mat.y0,mat.x1-mat.x0,mat.y1-mat.y0,10); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#5a6770'; ctx.font='600 12px Segoe UI,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText('semiconductor crystal', mat.x0+12, mat.y0-8);
+    ctx.strokeStyle='#9aa6ab'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(mat.x0,mat.y0+14); ctx.lineTo(mat.x0,mat.y1-14); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mat.x1,mat.y0+14); ctx.lineTo(mat.x1,mat.y1-14); ctx.stroke();
+    ctx.fillStyle='#9aa6ab'; ctx.font='700 14px monospace'; ctx.textAlign='center'; ctx.fillText('−', mat.x0-10, (mat.y0+mat.y1)/2); ctx.fillText('+', mat.x1+10, (mat.y0+mat.y1)/2);
+    var amp= mode==='ntc' ? (intensity/100)*4.5 : 0.6;
+    for(var i=0;i<atoms.length;i++){ var a=atoms[i]; var jx=Math.sin(vibPhase+i*1.7)*amp, jy=Math.cos(vibPhase*1.1+i)*amp;
+      ctx.beginPath(); ctx.arc(a.x+jx,a.y+jy,8,0,2*Math.PI); ctx.fillStyle='#c3ccd2'; ctx.fill(); ctx.strokeStyle='#aeb9bf'; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='700 8px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('+', a.x+jx, a.y+jy+0.5); }
+    ctx.textBaseline='alphabetic';
+    for(var p=0;p<photons.length;p++){ var ph=photons[p]; var ang=Math.atan2(ph.ty-ph.y,ph.tx-ph.x);
+      ctx.save(); ctx.translate(ph.x,ph.y); ctx.rotate(ang); ctx.strokeStyle='#eab308'; ctx.lineWidth=2.4; ctx.beginPath();
+      for(var w=0;w<=18;w+=2){ var yy=Math.sin(w*0.9)*3; if(w===0)ctx.moveTo(-w,yy); else ctx.lineTo(-w,yy); } ctx.stroke();
+      ctx.fillStyle='#eab308'; ctx.beginPath(); ctx.arc(0,0,3.2,0,2*Math.PI); ctx.fill(); ctx.restore(); }
+    if(mode==='ntc'){ var hot=intensity/100; ctx.strokeStyle='rgba(224,85,43,'+(0.18+0.5*hot)+')'; ctx.lineWidth=2;
+      for(var hw=0;hw<4;hw++){ var bx=mat.x0+20+(mat.x1-mat.x0-40)*hw/3; ctx.beginPath();
+        for(var t2=0;t2<=14;t2++){ if(t2===0)ctx.moveTo(bx,mat.y1+6); else ctx.lineTo(bx+Math.sin(t2*0.7+vibPhase+hw)*4*hot, mat.y1+6+t2); } ctx.stroke(); } }
+    for(var h=0;h<holes.length;h++){ var q=holes[h]; ctx.beginPath(); ctx.arc(q.x,q.y,5,0,2*Math.PI); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#d6336c'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#d6336c'; ctx.font='700 8px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('+',q.x,q.y+0.5); }
+    for(var e=0;e<electrons.length;e++){ var el=electrons[e]; ctx.beginPath(); ctx.arc(el.x,el.y,5.5,0,2*Math.PI); ctx.fillStyle='#2f6fb0'; ctx.fill(); ctx.strokeStyle='#1f4f86'; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.font='700 8px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('–',el.x,el.y+0.5); }
+    ctx.textBaseline='alphabetic';
+    for(var fl=0;fl<flashes.length;fl++){ var ff=flashes[fl]; ctx.beginPath(); ctx.arc(ff.x,ff.y,4+ff.t*12,0,2*Math.PI); ctx.strokeStyle=ff.col; ctx.globalAlpha=1-ff.t; ctx.lineWidth=2; ctx.stroke(); ctx.globalAlpha=1; }
+    drawBand();
+  }
+  function drawBand(){
+    ctx.fillStyle='#fbfcfd'; ctx.strokeStyle='#dde5ea'; ctx.lineWidth=1.5; roundRect(band.x0,band.y0,band.x1-band.x0,band.y1-band.y0,10); ctx.fill(); ctx.stroke();
+    var bw=band.x1-band.x0; ctx.fillStyle='#5a6770'; ctx.font='600 11px Segoe UI,sans-serif'; ctx.textAlign='center'; ctx.fillText('energy', (band.x0+band.x1)/2, band.y0-8);
+    ctx.fillStyle='rgba(47,111,176,.10)'; ctx.fillRect(band.x0+10, band.y0+16, bw-20, 34);
+    ctx.strokeStyle='#2f6fb0'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(band.x0+10,band.cbY); ctx.lineTo(band.x1-10,band.cbY); ctx.stroke();
+    ctx.fillStyle='#2f6fb0'; ctx.font='600 10.5px Segoe UI,sans-serif'; ctx.textAlign='left'; ctx.fillText('conduction band', band.x0+14, band.y0+28);
+    ctx.fillStyle='rgba(214,51,108,.10)'; ctx.fillRect(band.x0+10, band.vbY-18, bw-20, 34);
+    ctx.strokeStyle='#d6336c'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(band.x0+10,band.vbY); ctx.lineTo(band.x1-10,band.vbY); ctx.stroke();
+    ctx.fillStyle='#d6336c'; ctx.textAlign='left'; ctx.fillText('valence band', band.x0+14, band.vbY+26);
+    ctx.strokeStyle='#9aa6ab'; ctx.setLineDash([3,3]); ctx.lineWidth=1; var gx=band.x1-26;
+    ctx.beginPath(); ctx.moveTo(gx,band.cbY); ctx.lineTo(gx,band.vbY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.save(); ctx.translate(band.x1-12,(band.cbY+band.vbY)/2); ctx.rotate(-Math.PI/2); ctx.fillStyle='#5a6770'; ctx.font='600 10px Segoe UI,sans-serif'; ctx.textAlign='center'; ctx.fillText('band gap  E_g',0,0); ctx.restore();
+    for(var k=0;k<promos.length;k++){ var pr=promos[k]; var yy=band.vbY-(band.vbY-band.cbY)*Math.min(1,pr.t);
+      ctx.strokeStyle = mode==='ldr' ? 'rgba(234,179,8,'+(1-pr.t*0.5)+')' : 'rgba(224,85,43,'+(1-pr.t*0.5)+')';
+      ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(pr.x,band.vbY); ctx.lineTo(pr.x,yy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pr.x,yy); ctx.lineTo(pr.x-3,yy+5); ctx.lineTo(pr.x+3,yy+5); ctx.closePath(); ctx.fill(); }
+    var n=electrons.length, cap=Math.min(n,16), bw2=bw-44;
+    for(var c=0;c<cap;c++){ var x=band.x0+22 + bw2*(cap>1?c/(cap-1):0.5);
+      ctx.beginPath(); ctx.arc(x,band.cbY,4.5,0,2*Math.PI); ctx.fillStyle='#2f6fb0'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x,band.vbY,4.5,0,2*Math.PI); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#d6336c'; ctx.lineWidth=1.6; ctx.stroke(); }
+  }
+  function updatePanel(){
+    var n=electrons.length;
+    $('csm-inVal').textContent = mode==='ldr' ? intensity+' %' : (intensity*0.5).toFixed(0)+' °C';
+    $('csm-n').textContent=n; $('csm-I').textContent=(n*1.0).toFixed(0)+' (arb.)';
+    var R=2000/(n+2); $('csm-R').textContent=R.toFixed(0)+' (arb.)';
+    $('csm-rbar').style.width=Math.max(4,Math.min(100, R/(2000/2)*100)).toFixed(0)+'%';
+    $('st1').classList.toggle('flash', st1flash>0);
+  }
+  var last=performance.now();
+  function frame(now){ var dt=Math.min(0.05,(now-last)/1000); last=now; if(running) step(dt); draw(); updatePanel(); requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+  function applyMode(){
+    var ldr=(mode==='ldr');
+    $('csm-inLab').textContent=ldr?'Light intensity':'Temperature';
+    $('csm-slabel').textContent=ldr?'Light intensity':'Temperature';
+    $('csm-sout').textContent=ldr?intensity+' %':(intensity*0.5).toFixed(0)+' °C';
+    $('csm-enLab').textContent=ldr?'photon (energy ≥ E_g)':'thermal lattice energy';
+    $('csm-enSw').style.background=ldr?'#eab308':'#e0552b';
+    $('csm-st1').textContent=ldr ? 'Energy in — a photon with energy at least the band gap is absorbed by the crystal.' : 'Energy in — heat makes the lattice vibrate; these vibrations hand energy to bound electrons.';
+    electrons=[]; holes=[]; photons=[]; promos=[]; genAcc=0;
+  }
+  root.querySelectorAll('.csm-tab').forEach(function(t){ t.addEventListener('click',function(){
+    root.querySelectorAll('.csm-tab').forEach(function(x){ x.classList.toggle('csm-active',x===t); });
+    mode=t.getAttribute('data-mode'); applyMode(); }); });
+  $('csm-slider').addEventListener('input',function(){ intensity=parseInt(this.value,10); $('csm-sout').textContent= mode==='ldr'?intensity+' %':(intensity*0.5).toFixed(0)+' °C'; });
+  $('csm-run').addEventListener('click',function(){ running=!running; this.textContent=running?'Pause':'Run'; });
+  size(); applyMode();
+  var ro=new ResizeObserver(size); ro.observe(canvas);
+})();
+</script>
+</div>
+  </div><!-- /sense-carrier -->
+
+  <style>
+    #sense-root{ box-sizing:border-box; background:#eef2f5; font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif; }
+    #sense-root .sense-tabs{ max-width:920px; margin:0 auto; padding:12px 14px 0; display:flex; gap:8px; }
+    #sense-root .sense-tab{ font:700 14px "Segoe UI",system-ui,sans-serif; color:#5a6770; background:#fbfcfd; border:1px solid #dde5ea; border-radius:10px; padding:10px 18px; cursor:pointer; }
+    #sense-root .sense-tab:hover{ color:#16222c; border-color:#0e8c86; }
+    #sense-root .sense-tab.sense-active{ color:#fff; background:#0a615d; border-color:#0a615d; box-shadow:0 2px 8px rgba(10,97,93,.25); }
+  </style>
+  <script>
+  (function(){
+    var r=document.getElementById('sense-root'); if(!r) return;
+    var tabs=r.querySelectorAll('.sense-tab');
+    var circuit=document.getElementById('sense-circuit'), carrier=document.getElementById('sense-carrier');
+    tabs.forEach(function(t){ t.addEventListener('click',function(){
+      tabs.forEach(function(x){ x.classList.toggle('sense-active', x===t); });
+      var v=t.getAttribute('data-view');
+      circuit.style.display = v==='circuit' ? '' : 'none';
+      carrier.style.display = v==='carrier' ? '' : 'none';
+      window.dispatchEvent(new Event('resize'));
+    }); });
+  })();
+  </script>
+</div><!-- /sense-root -->
